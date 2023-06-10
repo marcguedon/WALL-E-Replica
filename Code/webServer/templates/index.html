@@ -8,11 +8,12 @@
 	</head>
 
 	<body>
+        <img class="wall-e" alt="WALL-E image" src="{{ url_for('static', filename='images/wall-e.png') }}">
         <div class="title">
             <h1>WALL-E</h1>
             <h1>INTERFACE</h1>
         </div>
-        <img class="wall-e" alt="WALL-E image" src="{{ url_for('static', filename='images/wall-e.png') }}">
+        
         <div class="menu">
             <div class="line one">
                 <div class="informationsSection">
@@ -134,11 +135,12 @@
                             </label>
                             <p>AUTO</p>
                         </div>
+
                         <div class="movements">
-                            <button class="movementButton top" onclick="moveForward()" title="FORWARD"><img alt="Top arrow" src="{{ url_for('static', filename='images/topArrow.png') }}"></button>
-                            <button class="movementButton left" onclick="moveLeft()" title="TURN LEFT"><img alt="Left arrow" src="{{ url_for('static', filename='images/leftArrow.png') }}"></button>
-                            <button class="movementButton right" onclick="moveRight()" title="TURN RIGHT"><img alt="Right arrow" src="{{ url_for('static', filename='images/rightArrow.png') }}"></button>
-                            <button class="movementButton bottom" onclick="moveBackward()" title="BACKWARD"><img alt="Bottom arrow" src="{{ url_for('static', filename='images/bottomArrow.png') }}"></button>
+                            <button class="movementButton top" onclick="move('forward')" title="FORWARD"><img alt="Top arrow" src="{{ url_for('static', filename='images/topArrow.png') }}"></button>
+                            <button class="movementButton left" onclick="move('left')" title="TURN LEFT"><img alt="Left arrow" src="{{ url_for('static', filename='images/leftArrow.png') }}"></button>
+                            <button class="movementButton right" onclick="move('right')" title="TURN RIGHT"><img alt="Right arrow" src="{{ url_for('static', filename='images/rightArrow.png') }}"></button>
+                            <button class="movementButton bottom" onclick="move('backward')" title="BACKWARD"><img alt="Bottom arrow" src="{{ url_for('static', filename='images/bottomArrow.png') }}"></button>
                         </div>
                     </div>
                 </div>

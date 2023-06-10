@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(function(data) {
+            
             //Si mode auto activé
             if (data.auto_mode) {
                 checkbox.checked = true;
@@ -33,26 +34,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 console.log('WALL-E est en mode manuel.');
             }
-
-            //Récupération état lumière
-            fetch('/getLightState')
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
-                    //Si lumière allumée
-                    if(data.light_on) {
-                        lightButton.style.backgroundImage = 'url(\'static/images/bulbOn2.png\')';
-                    }
-                    
-                    //Si lumière éteinte
-                    else {
-                        lightButton.style.backgroundImage = 'url(\'static/images/bulbOff2.png\')';
-                    }
-                });
         });
 
-    
+        //Récupération état lumière
+        fetch('/getLightState')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                
+                //Si lumière allumée
+                if(data.light_on) {
+                    lightButton.style.backgroundImage = 'url(\'static/images/bulbOn2.png\')';
+                }
+                
+                //Si lumière éteinte
+                else {
+                    lightButton.style.backgroundImage = 'url(\'static/images/bulbOff2.png\')';
+                }
+            });
+
     const batteryProgress = document.getElementById('batteryProgress');
     const batteryText = document.getElementById('batteryPercent');
 
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(response) {
             return response.text();
         })
-        .then(function(data) {
+        .then(function(data) {            
             var batteryPercent = parseInt(data);
             var batteryHeight = batteryPercent * 18 / 100;
 
@@ -82,37 +83,16 @@ function switchLight() {
     const lightButton = document.getElementById('lightButton');
 
     //Récupération état lumière
-    fetch('/getLightState')
+    fetch('/switchLight')
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
             //Si lumière allumée
             if(data.light_on) {
-                lightButton.style.backgroundImage = 'url(\'static/images/bulbOff2.png\')';
-
-                fetch('/setLightOff')
-                    .then(function(response) {
-                        if (response.ok) {
-                            console.log('WALL-E a éteint sa lumière.');
-                        } else {
-                            console.log('Une erreur s\'est produite lors de l\'appel à /setLightOff.');
-                        }
-                    });
-            }
-            
-            //Si lumière éteinte
-            else {
                 lightButton.style.backgroundImage = 'url(\'static/images/bulbOn2.png\')';
-
-                fetch('/setLightOn')
-                    .then(function(response) {
-                        if (response.ok) {
-                            console.log('WALL-E a allumé sa lumière.');
-                        } else {
-                            console.log('Une erreur s\'est produite lors de l\'appel à /setLightOn.');
-                        }
-                    });
+            } else {
+                lightButton.style.backgroundImage = 'url(\'static/images/bulbOff2.png\')';
             }
         });
 }
@@ -141,85 +121,36 @@ function switchOperatingMode(){
     const movementsButtons = Array.from(document.getElementsByClassName('movementButton'));
     const lightButton = document.getElementById('lightButton');
 
-    //Mode auto
-    if(checkbox.checked){
-        lightButton.disabled = true;
-        movementsButtons.forEach(function(button) {
-            button.disabled = true;
-        });
-
-        fetch('/setAutoMode')
+    fetch('/switchOperatingMode')
         .then(function(response) {
-            if (response.ok) {
-                console.log('WALL-E est en mode auto.');
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.auto_mode) {
+                lightButton.disabled = true;
+                lightButton.style.backgroundImage = 'url(\'static/images/bulbOff2.png\')';
+                movementsButtons.forEach(function(button) {
+                    button.disabled = true;
+                });
             } else {
-                console.log('Une erreur s\'est produite lors de l\'appel à /setAutoMode.');
-            }
-        });
-    }
-
-    //Mode manuel
-    else{
-        lightButton.disabled = false;
-        movementsButtons.forEach(function(button) {
-            button.disabled = false;
-        });
-
-        fetch('/setManualMode')
-        .then(function(response) {
-            if (response.ok) {
-                console.log('WALL-E est en mode manuel.');
-            } else {
-                console.log('Une erreur s\'est produite lors de l\'appel à /setManualMode.');
-            }
-        });
-    }
-}
-
-//Fonction Avancer
-function moveForward() {
-    fetch('/moveForward')
-        .then(function(response) {
-            if (response.ok) {
-                console.log('WALL-E a avancé.');
-            } else {
-                console.log('Une erreur s\'est produite lors de l\'appel à /moveForward.');
+                lightButton.disabled = false;
+                movementsButtons.forEach(function(button) {
+                    button.disabled = false;
+                });
             }
         });
 }
 
-//Fonction Tourner à gauche
-function moveLeft() {
-    fetch('/moveLeft')
-        .then(function(response) {
-            if (response.ok) {
-                console.log('WALL-E a tourné à gauche.');
-            } else {
-                console.log('Une erreur s\'est produite lors de l\'appel à /moveLeft.');
-            }
-        });
-}
+//Fonction Bouger
+function move(direction) {
+    const route = '/move';
 
-//Fonction Tourner à droite
-function moveRight() {
-    fetch('/moveRight')
+    fetch(route + '?direction=' + direction)
         .then(function(response) {
             if (response.ok) {
-                console.log('WALL-E a tourné à droite.');
+                console.log('WALL-E a bougé.');
             } else {
-                console.log('Une erreur s\'est produite lors de l\'appel à /moveRight.');
-            }
-        });
-}
-
-//Fonction Reculer
-function moveBackward() {
-    fetch('/moveBackward')
-        .then(function(response) {
-            if (response.ok) {
-                console.log('WALL-E a reculé.');
-            } else {
-                console.log('Une erreur s\'est produite lors de l\'appel à /moveBackward.');
+                console.log('Une erreur s\'est produite lors de l\'appel à /move dans la direction ' + direction + '.');
             }
         });
 }

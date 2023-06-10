@@ -32,20 +32,20 @@ class PCA9685:
     if (self.debug):
       print("Reseting PCA9685")
     self.write(self.__MODE1, 0x00)
-	
+
   def write(self, reg, value):
     "Writes an 8-bit value to the specified register/address"
     self.bus.write_byte_data(self.address, reg, value)
     if (self.debug):
       print("I2C: Write 0x%02X to register 0x%02X" % (value, reg))
-	  
+    
   def read(self, reg):
     "Read an unsigned byte from the I2C device"
     result = self.bus.read_byte_data(self.address, reg)
     if (self.debug):
       print("I2C: Device 0x%02X returned 0x%02X from reg 0x%02X" % (self.address, result & 0xFF, reg))
     return result
-	
+
   def setPWMFreq(self, freq):
     "Sets the PWM frequency"
     prescaleval = 25000000.0    # 25MHz
@@ -75,7 +75,7 @@ class PCA9685:
     self.write(self.__LED0_OFF_H+4*channel, off >> 8)
     if (self.debug):
       print("channel: %d  LED_ON: %d LED_OFF: %d" % (channel,on,off))
-	  
+    
   def setServoPulse(self, channel, pulse):
     "Sets the Servo Pulse,The PWM frequency must be 50HZ"
     pulse = pulse*4096/20000        #PWM frequency is 50HZ,the period is 20000us

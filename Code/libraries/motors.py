@@ -3,8 +3,6 @@ import time
 
 Dir = [
     'forward',
-    'left',
-    'right',
     'backward',
 ]
 
@@ -69,20 +67,47 @@ class MotorDriver():
         else:
             pwm.setDutycycle(self.PWMB, 0)
 
+    def forward(self, speed):
+        self.MotorRun(0, 'forward', speed)
+        self.MotorRun(1, 'forward', speed)
+
+    def backward(self, speed):
+        self.MotorRun(0, 'backward', speed)
+        self.MotorRun(1, 'backward', speed)
+
+    def left(self, speed):
+        self.MotorRun(0, 'backward', speed)
+        self.MotorRun(1, 'forward', speed)
+
+    def right(self, speed):
+        self.MotorRun(0, 'forward', speed)
+        self.MotorRun(1, 'backward', speed)
+
+    def stop(self):
+        self.MotorStop(0)
+        self.MotorStop(1)
+
 # Code de test des moteurs
 print("this is a motor driver test code")
 Motor = MotorDriver()
 
-print("forward 2 s")
-Motor.MotorRun(0, 'forward', 100)
-Motor.MotorRun(1, 'forward', 100)
-time.sleep(2)
+while(1):
+    print("forward 2s")
+    Motor.forward(100)
+    time.sleep(2)
 
-print("backward 2 s")
-Motor.MotorRun(0, 'backward', 100)
-Motor.MotorRun(1, 'backward', 100)
-time.sleep(2)
+    print("backward 2s")
+    Motor.backward(100)
+    time.sleep(2)
 
-print("stop")
-Motor.MotorStop(0)
-Motor.MotorStop(1)
+    print("left 2s")
+    Motor.left(100)
+    time.sleep(2)
+
+    print("right 2s")
+    Motor.right(100)
+    time.sleep(2)
+
+    print("stop 2s")
+    Motor.stop()
+    time.sleep(2)
