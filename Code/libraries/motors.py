@@ -1,16 +1,16 @@
 from PCA9685 import PCA9685
-import time
+from math import sqrt
+
+pwm = PCA9685(0x40, debug=False)
+pwm.setPWMFreq(50)
 
 Dir = [
     'forward',
     'backward',
 ]
 
-pwm = PCA9685(0x40, debug=False)
-pwm.setPWMFreq(50)
-
 class MotorDriver():
-    #Initialisation
+    # Initialization
     def __init__(self):
         self.PWMA = 0
         self.AIN1 = 1
@@ -19,95 +19,80 @@ class MotorDriver():
         self.BIN1 = 3
         self.BIN2 = 4
 
-    #Fonction mouvements
-    def MotorRun(self, motor, index, speed):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # The 2 next functions are used for each motor #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+    # Movements function (1 motor)
+    def motorRun(self, motor, index, speed):
         if speed > 100:
             return
         if(motor == 0):
             pwm.setDutycycle(self.PWMA, speed)
             if(index == Dir[0]):
-                print ("1")
                 pwm.setLevel(self.AIN1, 0)
                 pwm.setLevel(self.AIN2, 1)
-            elif(index == Dir[1]):
-                print ("2")
-                pwm.setLevel(self.AIN1, 1)
-                pwm.setLevel(self.AIN2, 1)
-            elif(index == Dir[2]):
-                print ("3")
-                pwm.setLevel(self.AIN1, 0)
-                pwm.setLevel(self.AIN2, 0)
             else:
-                print ("4")
                 pwm.setLevel(self.AIN1, 1)
                 pwm.setLevel(self.AIN2, 0)
         else:
             pwm.setDutycycle(self.PWMB, speed)
             if(index == Dir[0]):
-                print ("5")
                 pwm.setLevel(self.BIN1, 0)
                 pwm.setLevel(self.BIN2, 1)
-            elif(index == Dir[1]):
-                print ("6")
-                pwm.setLevel(self.BIN1, 1)
-                pwm.setLevel(self.BIN2, 1)
-            elif(index == Dir[2]):
-                print ("7")
-                pwm.setLevel(self.BIN1, 0)
-                pwm.setLevel(self.BIN2, 0)
             else:
-                print ("8")
                 pwm.setLevel(self.BIN1, 1)
                 pwm.setLevel(self.BIN2, 0)
 
-    #Fonction stop
-    def MotorStop(self, motor):
+    # Stop function (1 motor)
+    def motorStop(self, motor):
         if (motor == 0):
             pwm.setDutycycle(self.PWMA, 0)
         else:
             pwm.setDutycycle(self.PWMB, 0)
 
-    def forward(self, speed):
-        self.MotorRun(0, 'forward', speed)
-        self.MotorRun(1, 'forward', speed)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # The next functions are used for the complete robot #
+    # It uses the first two functions                    #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-    def backward(self, speed):
-        self.MotorRun(0, 'backward', speed)
-        self.MotorRun(1, 'backward', speed)
+    def stopMotors(self):
+        self.motorStop(0)
+        self.motorStop(1)
 
-    def left(self, speed):
-        self.MotorRun(0, 'backward', speed)
-        self.MotorRun(1, 'forward', speed)
+    def runMotor(self, motor, value):
+        maxSpeed = 100
+        if value == 0:
+            self.motorStop(motor)
+        else:
+            direction = 'backward' if value < 0 else 'forward'
+            absValue = abs(value)
+            if absValue > 1:
+                absValue = 1
+            self.motorRun(motor, direction, absValue * maxSpeed)
 
-    def right(self, speed):
-        self.MotorRun(0, 'forward', speed)
-        self.MotorRun(1, 'backward', speed)
+    def runMotors(self, rightMotor, leftMotor):
+        self.runMotor(0, rightMotor)
+        self.runMotor(1, leftMotor)
+        return
+    
+    def runMotorDirection(self, mainMotor, secondaryMotor, left):
+        if left:
+            self.runMotors(mainMotor, secondaryMotor)
+        else:
+            self.runMotors(secondaryMotor, mainMotor)
 
-    def stop(self):
-        self.MotorStop(0)
-        self.MotorStop(1)
+    def move(self, xDirection: float, yDirection: float):
+        if xDirection == 0 and yDirection == 0:
+            self.stopMotors()
+            return
+        
+        magnitude = sqrt(xDirection * xDirection + yDirection * yDirection)
 
-# Code de test des moteurs
-print("this is a motor driver test code")
-Motor = MotorDriver()
-
-while(1):
-    print("forward 2s")
-    Motor.forward(100)
-    time.sleep(2)
-
-    print("backward 2s")
-    Motor.backward(100)
-    time.sleep(2)
-
-    print("left 2s")
-    Motor.left(100)
-    time.sleep(2)
-
-    print("right 2s")
-    Motor.right(100)
-    time.sleep(2)
-
-    print("stop 2s")
-    Motor.stop()
-    time.sleep(2)
+        if abs(yDirection) < abs(xDirection) / 2:
+            self.runMotorDirection(magnitude, -magnitude, xDirection < 0)
+        else:
+            signedMagnitude = magnitude
+            if yDirection < 0:
+                signedMagnitude = -magnitude
+            self.runMotorDirection(signedMagnitude, yDirection, xDirection < 0)

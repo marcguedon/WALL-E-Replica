@@ -5,8 +5,6 @@ import time
 
 Dir = [
     'forward',
-    'left',
-    'right',
     'backward',
 ]
 

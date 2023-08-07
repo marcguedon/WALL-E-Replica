@@ -3,7 +3,7 @@ import mediapipe as mp
 
 camera = None
 
-#Fonction récupération vidéo sans overlay IA
+# Video without AI overlay
 def cameraCaptureWithoutAIOverlay():
     global camera
 
@@ -20,7 +20,7 @@ def cameraCaptureWithoutAIOverlay():
         frame = buffer.tobytes()
         yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-#Fonction récupération vidéo avec overlay IA
+# Video with AI overlay
 def cameraCaptureWithAIOverlay():
     global camera
 

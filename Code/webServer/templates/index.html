@@ -29,6 +29,10 @@
                         <div class="action">
                             <p>Walking...</p>
                         </div>
+                        <div class="sensors">
+                            <p id="leftSensor"></p>
+                            <p id="rightSensor"></p>
+                        </div>
                     </div>
                 </div>
 
@@ -36,10 +40,10 @@
                     <h3>CAMERA</h3>
                     <div class="display">
                         <div class="camera">
-                            <img id="cameraDisplay" alt="Camera display" src="{{ url_for('showCameraWithoutAIOverlay') }}">
+                            <img id="cameraDisplay" alt="Camera display" src="{{ url_for('showCameraWithoutAIOverlay') }}" draggable="false">
                             <div class="cameraControls">
                                 <button id="AIButton" class="cameraButton" title="SWITCH AI ON/OFF" onclick="switchAI()"></button>
-                                <button id="lightButton" class="cameraButton" title="SWITCH LIGHT ON/OFF" onclick="switchLight()"></button>
+                                <button id="lightButton" class="cameraButton" title="SWITCH CAMERA LIGHT ON/OFF" onclick="switchLight()"></button>
                             </div>
                         </div>
                     </div>
@@ -137,14 +141,24 @@
                         </div>
 
                         <div class="movements">
-                            <button class="movementButton top" onclick="move('forward')" title="FORWARD"><img alt="Top arrow" src="{{ url_for('static', filename='images/topArrow.png') }}"></button>
-                            <button class="movementButton left" onclick="move('left')" title="TURN LEFT"><img alt="Left arrow" src="{{ url_for('static', filename='images/leftArrow.png') }}"></button>
-                            <button class="movementButton right" onclick="move('right')" title="TURN RIGHT"><img alt="Right arrow" src="{{ url_for('static', filename='images/rightArrow.png') }}"></button>
-                            <button class="movementButton bottom" onclick="move('backward')" title="BACKWARD"><img alt="Bottom arrow" src="{{ url_for('static', filename='images/bottomArrow.png') }}"></button>
+                            <div class="joystick" id="movementStick">
+                                <svg><line class="joystickLine" stroke="#CCCCCC" x1="50%" y1="50%" x2="50%" y2="50%" stroke-width="5px" stroke-linecap="round" /></svg>
+                                <div class="joystickHead">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="arms">
+                            <input id="leftArm" class="armSlider" type="range" oninput="moveArm('left', this.value)" orient="vertical" title="MOVE UP/DOWN LEFT ARM" min="40" max="140" value="0">
+                            <input id="rightArm" class="armSlider" type="range" oninput="moveArm('right', this.value)" orient="vertical" title="MOVE UP/DOWN RIGHT ARM" min="40" max="140" value="0">
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <footer>
+                <p>Author : Marc GUEDON / Website : </p><a href="http://thedraill.e-monsite.com/" target="_blank">http://thedraill.e-monsite.com/</a>
+            </footer>
         </div>
     </body>
 </html>

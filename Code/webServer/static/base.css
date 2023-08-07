@@ -28,6 +28,11 @@ h3{
   font-family: Arial, Helvetica, sans-serif;
 }
 
+a{
+  margin-left: 4px;
+  color: black;
+}
+
 .title{
   position: absolute;
   display: flex;
@@ -49,6 +54,7 @@ h3{
   width: 100vw;
   padding: 40px;
   padding-right: 60px;
+  padding-bottom: 5px;
   justify-content: space-between;
 }
 
@@ -66,6 +72,14 @@ h3{
   height: 35vh;
 }
 
+footer{
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  font-style: italic;
+  font-size: 0.8em;
+}
+
 .line > div{
   background-color: #CCCCCC;
   border-radius: 5px;
@@ -80,29 +94,33 @@ h3{
   margin-right: 6vw;
 }
 
-.data{
+.informationsSection .data{
   padding-left: 15px;
 }
 
-.data > div{
-  display: flex;
-  flex-direction: row;
-  margin-bottom: 15px;
+.informationsSection .data > div{
+  margin-bottom: 20px;
   align-content: center;
 }
 
-.batteryImage{
-  position: relative;
-  margin-right: 7px;
+.informationsSection .battery{
+  display: flex;
+  flex-direction: row;
 }
 
-.batteryImage > img{
+.informationsSection .batteryImage{
+  position: relative;
+  margin-right: 7px;
+  line-height: 0;
+}
+
+.informationsSection .batteryImage > img{
   height: 30px;
 }
 
-#batteryProgress{
+.informationsSection #batteryProgress{
   position: absolute;
-  bottom: 8px;
+  bottom: 4px;
   left: 4px;
   max-height: 18px;
   width: 10px;
@@ -111,9 +129,14 @@ h3{
   border-radius: 2px;
 }
 
-.battery > p{
+.informationsSection .battery > p{
   display: flex;
   align-items: center;
+}
+
+.informationsSection .sensors{
+  display: flex;
+  flex-direction: column;
 }
 
 .cameraSection{
@@ -134,12 +157,21 @@ h3{
   position: relative;
   overflow: hidden;
   display: inline-block;
-  height: 297.5px;
+  height: 385px;
   align-self: center;
 }
 
 .display > .camera > #cameraDisplay{
   height: 100%;
+  user-select: none;
+}
+
+.display > .camera > .cameraDragActive:hover{
+  cursor: grab;
+}
+
+.display > .camera > .cameraDragActive:active{
+  cursor: grabbing;
 }
 
 .cameraControls{
@@ -152,8 +184,8 @@ h3{
 
 .cameraControls > button{
   display: flex;
-  height: 30px;
-  width: 30px;
+  height: 40px;
+  width: 40px;
   background: rgba(0, 0, 0, 0.2);
   border: none;
   padding: 0;
@@ -242,8 +274,8 @@ h3{
 .switch {
   position: relative;
   display: inline-block;
-  width: 34px;
-  height: 60px;
+  width: 51px;
+  height: 90px;
   margin-top: 10px;
   margin-bottom: 10px;
   border-radius: 50%;
@@ -270,23 +302,23 @@ h3{
 .slider:before {
   position: absolute;
   content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  top: 4px;
+  height: 39px;
+  width: 39px;
+  left: 6px;
+  top: 6px;
   background-color: white;
   -webkit-transition: .4s;
   transition: .4s;
 }
 
 input:checked + .slider {
-  background-color: #53a443;
+  background-color: #cc9858;
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateY(26px);
-  -ms-transform: translateY(26px);
-  transform: translateY(26px);
+  -webkit-transform: translateY(39px);
+  -ms-transform: translateY(39px);
+  transform: translateY(39px);
 }
 
 .slider.round {
@@ -297,49 +329,126 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
-.movements{
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.joystick{
+  height: 150px;
+  width: 150px;
+  background-color: white;
+  border-radius: 50%;
+  position: relative;
+  cursor: grab;
 }
 
-.movementButton{
-  height: 50px;
-  width: 50px;
-  border-radius: 4px;
+.joystickHead{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -30px;
+  margin-top: -30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: gray;
 }
 
-.movementButton:hover{
-  cursor: pointer;
+/* Arrows on the head */
+.joystickHead::after{
+  position: absolute;
+  content: "";
+  top: 50%;
+  left: 50%;
+  margin-left: -18px;
+  margin-top: -18px;
+  width: 36px;
+  height: 36px;
+  transform: rotateZ(45deg);
+  background-image: radial-gradient(transparent 0%, transparent 70%, white 74%, white 100%);
 }
 
-.movementButton:active:not(:disabled){
+.joystick svg {
+  width: 100%;
+  height: 100%;
+}
+
+.joystick.dragging {
+  cursor: grabbing;
+}
+
+.joystick.dragging .joystickHead {
   background-color: #cc9858;
 }
 
-button.movementButton:disabled{
+.joystick.disabled{
+  cursor: not-allowed;
+  background-color: #AAAAAA;
+  
+}
+
+.arms{
+  display: flex;
+  flex-direction: row;
+  width: 16%;
+  justify-content: space-between;
+}
+
+input[type=range].armSlider:disabled{
   cursor: not-allowed;
 }
 
-.movementButton > img{
+input[type=range].armSlider {
   height: 100%;
-  width: 100%;
+  appearance: slider-vertical;
+  background-color: transparent;
+  width: 17px;
+  cursor: pointer;
 }
 
-.top{
-  grid-area: 1 / 2 / 1 / 2;
+
+
+
+
+/*input[type=range].armSlider {
+  height: 100%;
+  -webkit-appearance: slider-vertical;
+  background-color: transparent;
+  width: 17px;
 }
 
-.left{
-  grid-area: 2 / 1 / 2 / 1;
+input[type=range].armSlider::-webkit-slider-runnable-track {
+  width: 9px;
+  height: 100%;
+  cursor: pointer;
+  background: #cc9858;
+  border-radius: 5px;
+  border: 1px solid #000000;
+}
+input[type=range].armSlider::-webkit-slider-thumb {
+  border: 1px solid #000000;
+  height: 17px;
+  width: 17px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
 }
 
-.right{
-  grid-area: 2 / 3 / 2 / 3;
+input[type=range].armSlider::-moz-range-track {
+  width: 9px;
+  height: 100%;
+  cursor: pointer;
+  background: #cc9858;
+  border-radius: 5px;
+  border: 1px solid #000000;
 }
+input[type=range].armSlider::-moz-range-thumb {
+  border: 1px solid #000000;
+  height: 17px;
+  width: 17px;
+  border-radius: 50%;
+  cursor: pointer;
+}*/
 
-.bottom{
-  grid-area: 3 / 2 / 3 / 2;
-}
+
+
+
 
 @media screen and (max-width: 80rem) {
   body{
@@ -358,6 +467,7 @@ button.movementButton:disabled{
   .menu{
     width: auto;
     padding: 20px;
+    padding-bottom: 5px;
   }
 
   .one{
@@ -383,11 +493,58 @@ button.movementButton:disabled{
     margin: 0;
   }
 
-  .display > .camera{
-    height: 280px;
+  .cameraSection .camera{
+    height: 550px;
   }
+
+  .cameraSection .cameraControls{
+    top: 15px;
+    left: 15px;
+  }
+
+  .cameraSection .cameraButton{
+    height: 60px;
+    width: 60px;
+    margin-right: 15px;
+  }
+
+  .controlsSection{
+    height: 400px;
+  }
+
+  .controlsSection p{
+    font-size: 1.5em;
+  }
+
+  .controlsSection .switch{
+    height: 90px;
+    width: 51px;
+  }
+
+  .controlsSection .round{
+    border-radius: 51px;
+  }
+
+  .controlsSection .joystick{
+    height: 200px;
+    width: 200px;
+  }
+
+  .controlsSection input[type=range].armSlider{
+    width: 30px;
+    height: 150%;
+  }
+
   .soundboardSection{
     margin: 0;
-    height: 25vh;
+    height: 400px;
+  }
+
+  .soundboardSection > .soundsGrid{
+    height: 90%;
+  }
+
+  .soundboardSection .buttonText{
+    font-size: 2em;;
   }
 }
