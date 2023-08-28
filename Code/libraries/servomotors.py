@@ -48,39 +48,54 @@ def moveHead(direction):
     global currentNeckTopAngle
     global currentNeckBottomAngle
 
+    step = 4
+
     if direction == 'left':
-        if currentHeadRotationAngle + 1 <= 150:
-            currentHeadRotationAngle = currentHeadRotationAngle + 1
+        if currentHeadRotationAngle + step <= 150:
+            currentHeadRotationAngle = currentHeadRotationAngle + step
             setServoAngle(headRotation, currentHeadRotationAngle)
+        else:
+            currentHeadRotationAngle = 150
 
     if direction == 'right':
-        if currentHeadRotationAngle - 1 >= 30:
-            currentHeadRotationAngle = currentHeadRotationAngle - 1
+        if currentHeadRotationAngle - step >= 30:
+            currentHeadRotationAngle = currentHeadRotationAngle - step
             setServoAngle(headRotation, currentHeadRotationAngle)
+        else:
+            currentHeadRotationAngle = 30
 
     if direction == 'up':
-        if currentNeckTopAngle - 1 >= 0:
-            currentNeckTopAngle = currentNeckTopAngle - 1
+        if currentNeckTopAngle - step >= 0:
+            currentNeckTopAngle = currentNeckTopAngle - step
             setServoAngle(neckTop, currentNeckTopAngle)
+        else:
+            currentNeckTopAngle = 0
 
-        if currentNeckBottomAngle + 1 <= 180:
-            currentNeckBottomAngle = currentNeckBottomAngle + 1
+        if currentNeckBottomAngle + step <= 180:
+            currentNeckBottomAngle = currentNeckBottomAngle + step
             setServoAngle(neckBottom, currentNeckBottomAngle)
+        else:
+            currentNeckBottomAngle = 180
 
     if direction == 'down':
-        if currentNeckTopAngle + 1 <= 180:
-            currentNeckTopAngle = currentNeckTopAngle + 1
+        if currentNeckTopAngle + step <= 180:
+            currentNeckTopAngle = currentNeckTopAngle + step
             setServoAngle(neckTop, currentNeckTopAngle)
+        else:
+            currentNeckTopAngle = 180
 
-        if currentNeckBottomAngle - 1 >= 30:
-            currentNeckBottomAngle = currentNeckBottomAngle - 1
+        if currentNeckBottomAngle - step >= 30:
+            currentNeckBottomAngle = currentNeckBottomAngle - step
             setServoAngle(neckBottom, currentNeckBottomAngle)
+        else:
+            currentNeckBottomAngle = 30
 
 # Eyes movement
 def moveEye(eye, angle):
     if eye == 'left':
+        # max angle (up) = 40 / min angle (down) = 140
         setServoAngle(leftEye, angle)
 
     if eye == 'right':
-        # max angle (up) : 140 / min angle (down) : 80
+        # max angle (up) = 140 / min angle (down) = 40
         setServoAngle(rightEye, angle)

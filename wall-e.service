@@ -1,0 +1,12 @@
+[Unit]
+Description=WALL-E Robot
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python [path_to_webServer.py_file]
+WorkingDirectory=[path_to_folder_containing_webServer.py_file]
+Restart=always
+User=[your_username]
+
+[Install]
+WantedBy=multi-user.target

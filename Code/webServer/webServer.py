@@ -1,35 +1,36 @@
 from flask import Flask, render_template, jsonify, request, Response
 import os
 import yaml
+import threading
+import time
 
 # Importation of homemade libraries
 import sys
-sys.path.append('libraries')
+ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(ROOT_PATH + '/../libraries')
+# sys.path.append('libraries')
+print(sys.path)
 import camera
 import sounds
 import light
 import motors
 import servomotors
-# import screen
 import ultrasonic_sensor
-# import battery
-# import controller
+import battery
+import screen
 
 app = Flask(__name__, static_folder='static')
 
 motor = motors.MotorDriver()
 
-# Battery percent getter
 @app.route('/getBatteryPercent')
 def getBatteryPercent():
-    # batteryPercent = battery.getBatteryPercent()
-    batteryPercent = 50
+    batteryPercent = battery.getBatteryPercent()
 
     print('Pourcentage batterie : ' + str(batteryPercent))
 
     return str(batteryPercent)
 
-# Light state getter
 @app.route('/getLightState')
 def getLightState():
     filePath = os.path.join(os.path.dirname(__file__), 'config.yaml')
@@ -42,7 +43,7 @@ def getLightState():
 
     return jsonify({'light_on': data['light_on']})
 
-# Operating mode getter
+# Operating mode getter (auto or manual)
 @app.route('/getOperatingMode')
 def getOperatingMode():
     filePath = os.path.join(os.path.dirname(__file__), 'config.yaml')
@@ -55,7 +56,6 @@ def getOperatingMode():
 
     return {'auto_mode': data['auto_mode']}
 
-# Light state switch
 @app.route('/switchLight')
 def switchLight():
     filePath = os.path.join(os.path.dirname(__file__), 'config.yaml')
@@ -63,7 +63,7 @@ def switchLight():
         data = yaml.safe_load(file)
 
     data['light_on'] = not data['light_on']
-    light.switchLightOnOff('cameraLight')
+    light.switchLightOnOff('cameraLight', data['light_on'])
 
     # Writing in YAML file
     with open(filePath, 'w') as file:
@@ -73,7 +73,7 @@ def switchLight():
 
     return jsonify({'light_on': data['light_on']})
 
-# Operating mode switch
+# Operating mode switch (auto or manual)
 @app.route('/switchOperatingMode')
 def switchOperatingMode():
     filePath = os.path.join(os.path.dirname(__file__), 'config.yaml')
@@ -92,40 +92,37 @@ def switchOperatingMode():
 
     return jsonify({'auto_mode': data['auto_mode']})
 
-# Show camera without AI overlay
 @app.route('/showCameraWithoutAIOverlay')
 def showCameraWithoutAIOverlay():
     return Response(camera.cameraCaptureWithoutAIOverlay(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# Show camera with AI overlay
 @app.route('/showCameraWithAIOverlay')
 def showCameraWithAIOverlay():
     return Response(camera.cameraCaptureWithAIOverlay(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# Move head
-@app.route('/head')
+@app.route('/moveHead')
 def head():
-    xDirection = request.args.get('xDirection')
-    yDirection = request.args.get('yDirection')
+    xDirection = str(request.args.get('xDirection'))
+    yDirection = str(request.args.get('yDirection'))
 
     if xDirection == 'left':
-        print('Tourner tête à gauche')
+        print('Turn head left')
         servomotors.moveHead('left')
 
     if xDirection == 'right':
-        print('Tourner tête à droite')
+        print('Turn head right')
         servomotors.moveHead('right')
 
     if xDirection == 'none':
-        print('')
-        
-        
+        print('')      
+
+
     if yDirection == 'up':
-        print('Monter tête')
+        print('Head up')
         servomotors.moveHead('up')
 
     if yDirection == 'down':
-        print('Descendre tête')
+        print('Head down')
         servomotors.moveHead('down')
 
     if yDirection == 'none':
@@ -133,7 +130,7 @@ def head():
 
     return 'OK'
 
-# Move
+# Move robot
 @app.route('/move')
 def move():
     xDirection = float(request.args.get('xDirection'))
@@ -143,11 +140,10 @@ def move():
 
     return 'OK'
 
-# Move arm
 @app.route('/moveArm')
 def moveArm():
-    arm = request.args.get('arm')
-    angle = request.args.get('angle')
+    arm = str(request.args.get('arm'))
+    angle = int(request.args.get('angle'))
 
     servomotors.moveArm(arm, angle)
 
@@ -156,10 +152,13 @@ def moveArm():
 # Make sound
 @app.route('/makeSound')
 def makeSound():
-    soundNum = request.args.get('sound')
+    soundNum = str(request.args.get('sound'))
+    duration = float(request.args.get('duration'))
 
-    print('Son ' + str(soundNum))
-    sounds.playSound(soundNum)
+    soundPath = ROOT_PATH + '/static/sounds/son' + soundNum + '.mp3'
+
+    soundThread = threading.Thread(target=playSoundWithLight, args=(soundPath, duration))
+    soundThread.start()
 
     return 'OK'
 
@@ -182,10 +181,10 @@ def index():
 def initWebServer():
     light.initLights()
     servomotors.initServomotors()
-    # screen.initScreen()
+    screen.initScreen()
     
-    # batteryPercent = battery.getBatteryPercent()
-    # screen.updateScreen(batteryPercent)
+    batteryPercent = battery.getBatteryPercent()
+    screen.updateScreen(batteryPercent)
 
     filePath = os.path.join(os.path.dirname(__file__), 'config.yaml')
     with open(filePath, 'r') as file:
@@ -200,10 +199,27 @@ def initWebServer():
 
     print('Initialized server')
 
+def updateScreen():
+    while True:
+        batteryPercent = battery.getBatteryPercent()
+        screen.updateScreen(batteryPercent)
+
+        print('Screen updated')
+
+        time.sleep(60)
+
+def playSoundWithLight(soundPath, duration):
+    sounds.playSound(soundPath)
+
+    light.switchLightOnOff('ledLight', True)
+    time.sleep(duration)
+    light.switchLightOnOff('ledLight', False)
 
 if __name__ == '__main__':
     initWebServer()
     print('Le serveur Flask a démarré !')
+
+    ScreenThread = threading.Thread(target=updateScreen)
+    ScreenThread.start()
     
-    # app.run(port=8888)
     app.run(host='0.0.0.0', port=5000, debug=True)

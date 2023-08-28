@@ -1,7 +1,10 @@
 import Adafruit_GPIO.SPI as SPI
 import ST7789 as TFT
 import math
+import os
 from PIL import Image, ImageDraw, ImageFont
+
+ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Raspberry Pi configuration
 RST_PIN = 25
@@ -27,8 +30,8 @@ def initScreen():
     clearScreen()
 
     # Add text
-    text = "SOLAR CHARGE LEVEL"
-    font = ImageFont.truetype("Tests/screen/arial.ttf", 18)
+    text = 'SOLAR CHARGE LEVEL'
+    font = ImageFont.truetype(ROOT_PATH + '/static/fonts/arial.ttf', 18)
     text_width, text_height = draw.textsize(text, font=font)
     text_x = (SCREEN_WIDTH - text_width) // 2
     text_y = 15

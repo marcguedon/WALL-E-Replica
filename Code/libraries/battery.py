@@ -12,14 +12,3 @@ def getBatteryPercent():
     percent = (value - 14460) * (100 - 0) / (20195 - 14460)
 
     return percent
-
-# ~~~~~~~~~~~~~~~ #
-#      TESTS      #
-# ~~~~~~~~~~~~~~~ #
-
-import time
-
-while True :
-    percent = getBatteryPercent()
-    print(str(percent))
-    time.sleep(1)

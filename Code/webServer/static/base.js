@@ -1,23 +1,23 @@
 var AIOn = false;
 var initialX = null;
 var initialY = null;
-var isDragged = false;
+var cameraDragged = false;
 var joystickDragged = false;
 
-//Initialisation page web
+//Web page initialization
 document.addEventListener('DOMContentLoaded', function() {
     const checkbox = document.getElementById('autoCheckbox');
     const movementStick = document.getElementById('movementStick');
     const armSliders = Array.from(document.getElementsByClassName('armSlider'));
     const lightButton = document.getElementById('lightButton');
 
-    //Récupération/affichage mode actif
+    //Activated mode recovery/display
     fetch('/getOperatingMode')
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
-            //Si mode auto activé
+            //If auto mode activated, manual buttons disable
             if (data.auto_mode) {
                 removeCameraDragActiveClass();
                 checkbox.checked = true;
@@ -29,10 +29,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     slider.value = 0;
                 });
 
-                console.log('WALL-E est en mode auto.');
+                console.log('WALL-E is in auto mode.');
             }
             
-            //Si mode manuel activé
+            //If manual mode activated, manual buttons activation
             else {
                 setCameraDragActiveClass();
                 checkbox.checked = false;
@@ -43,28 +43,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     slider.disabled = false;
                 });
 
-                console.log('WALL-E est en mode manuel.');
+                console.log('WALL-E is in manual mode.');
             }
         });
 
-        //Récupération état lumière
-        fetch('/getLightState')
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                if(data.light_on) lightButton.style.backgroundImage = 'url(\'static/images/bulbOn2.png\')';
-                else lightButton.style.backgroundImage = 'url(\'static/images/bulbOff2.png\')';
-            });
+    //Light state recovery
+    fetch('/getLightState')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if(data.light_on) lightButton.style.backgroundImage = 'url(\'static/images/bulbOn2.png\')';
+            else lightButton.style.backgroundImage = 'url(\'static/images/bulbOff2.png\')';
+        });
 
     const leftSensorValue = document.getElementById('leftSensor');
     const rightSensorValue = document.getElementById('rightSensor');
 
+    //Ultrasonic sensors recovery
     fetch('/getSensorsValue')
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
+            //Sensors work between 2cm and 4m
             if(data[0] < 2 || data[0] > 400) leftSensorValue.textContent = 'Left sensor: no obstacle';
             else leftSensorValue.textContent = 'Left sensor: ' + data[0] + 'cm';
 
@@ -72,91 +74,83 @@ document.addEventListener('DOMContentLoaded', function() {
             else rightSensorValue.textContent = 'Right sensor: ' + data[1] + 'cm';
         });
 
-    const batteryProgress = document.getElementById('batteryProgress');
-    const batteryText = document.getElementById('batteryPercent');
-
-    //Récupération/affichage pourcentage batterie
-    fetch('/getBatteryPercent')
-        .then(function(response) {
-            return response.text();
-        })
-        .then(function(data) {            
-            var batteryPercent = parseInt(data);
-            var batteryHeight = batteryPercent * 18 / 100;
-
-            //Changement couleur batterie
-            if(batteryPercent < 20) batteryProgress.style.background = 'red';
-            else batteryProgress.style.background = 'green';
-
-            batteryProgress.style.height = batteryHeight + 'px';
-            batteryText.textContent = batteryPercent + '%';
-        });
-
-    
+    //Used to move WALL-E's head
     document.addEventListener('mousemove', function(event) {
-        if (!isDragged) return;
+        if (!cameraDragged) return;
 
-        // Empêcher le défilement de la page lors du glissement
+        //Prevent page scrolling when dragging
         event.preventDefault();
 
         moveHead(event.clientX, event.clientY);
     });
 
+    //Used to move WALL-E's head
     document.addEventListener('touchmove', function(event) {
-        if (!isDragged) return;
+        if (!cameraDragged) return;
 
-        // Empêcher le défilement de la page lors du glissement
+        //Prevent page scrolling when dragging
         event.preventDefault();
 
         moveHead(event.touches[0].clientX, event.touches[0].clientY);
     });
     
+    //Used to move WALL-E's head
     document.addEventListener('mouseup', function(event) {
-        isDragged = false;
+        cameraDragged = false;
     });
 
+    //Used to move WALL-E's head
     document.addEventListener('touchend', function(event) {
-        isDragged = false;
+        cameraDragged = false;
     });
 
     joystickHead = movementStick.getElementsByClassName('joystickHead')[0];
     joystickLine = movementStick.getElementsByClassName('joystickLine')[0];
 
+    //Used to move WALL-E
     let handleJoystick = function(clientX, clientY) {
+        //Get the bounding rectangles of the movement stick and joystick head
         let rect = movementStick.getBoundingClientRect();
         let headRect = joystickHead.getBoundingClientRect();
 
         let ratio = 0.25;
 
+        //Calculate offset based on the joystick head's dimensions and ratio
         let offsetWidth = headRect.width * (ratio - 0.5);
         let offsetHeight = headRect.height * (ratio - 0.5);
 
+        //Calculate the half-width and half-height of the joystick's effective area
         let halfWidth = rect.width / 2 + offsetWidth;
         let halfHeight = rect.height / 2 + offsetHeight;
 
+        //Calculate normalized delta values for X and Y movement
         let dx = (clientX - rect.left + offsetWidth) / halfWidth - 1;
         let dy = (clientY - rect.top + offsetHeight) / halfHeight - 1;
 
+        //Calculate the squared radius of the movement vector
         let radiusSquared = dx * dx + dy * dy;
 
+        //If the radius squared is greater than 1, normalize the vector
         if (radiusSquared > 1) {
             let radius = Math.sqrt(radiusSquared);
             dx /= radius;
             dy /= radius;
         }
 
+        //Calculate new positions for the joystick head and line
         let newX = (dx + 1) * halfWidth - offsetWidth;
         let newY = (dy + 1) * halfHeight - offsetHeight;
         
+        //Update the joystick head's position and the line's end point
         joystickHead.style.left = newX + 'px';
         joystickHead.style.top = newY + 'px';
-
         joystickLine.setAttribute('x2', newX + 'px');
         joystickLine.setAttribute('y2', newY + 'px');
 
         updateMovement(dx, dy);
     };
     
+    //Used to move WALL-E
     document.addEventListener('mouseup', function(event) {
         if (!joystickDragged) return;
 
@@ -170,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateMovement(0, 0);
     });
 
+    //Used to move WALL-E
     document.addEventListener('touchend', function(event) {
         if (!joystickDragged) return;
 
@@ -183,6 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateMovement(0, 0);
     });
 
+    //Used to move WALL-E
     movementStick.onmousedown = function(event) {
         event.preventDefault();
 
@@ -194,6 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         handleJoystick(event.clientX, event.clientY);
     };
 
+    //Used to move WALL-E
     movementStick.ontouchstart = function(event) {
         event.preventDefault();
         
@@ -204,6 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
         handleJoystick(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
     };
 
+    //Used to move WALL-E
     document.addEventListener('mousemove', function(event) {
         if (!joystickDragged) return;
 
@@ -212,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
         handleJoystick(event.clientX, event.clientY);
     });
 
+    //Used to move WALL-E
     document.addEventListener('touchmove', function(event) {
         if (!joystickDragged) return;
 
@@ -219,6 +218,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         handleJoystick(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
     });
+
+    updateBatteryPercent();
 });
 
 var moveHeadRequestRunning = false;
@@ -226,6 +227,8 @@ var moveHeadPrevDx = 0;
 var moveHeadPrevDy = 0;
 var moveHeadNextDx = 0;
 var moveHeadNextDy = 0;
+
+const threshold = 5;
 
 function moveHead(currentX, currentY) {
     moveHeadNextDx = currentX;
@@ -239,7 +242,7 @@ function moveHead(currentX, currentY) {
     moveHeadPrevDx = moveHeadNextDx;
     moveHeadPrevDy = moveHeadNextDy;
 
-    const route = '/head';
+    const route = '/moveHead';
 
     var diffX = initialX - currentX;
     var diffY = initialY - currentY;
@@ -247,18 +250,18 @@ function moveHead(currentX, currentY) {
     var xDirection = 'none';
     var yDirection = 'none';
 
-    // Détection de l'axe horizontal (swipe à gauche ou à droite)
-    if (diffX > 0) xDirection = 'right';
-    else if (diffX < 0) xDirection = 'left';
+    if (Math.abs(diffX) > threshold) {
+        xDirection = diffX > 0 ? 'right' : 'left';
+    }
 
-    // Détection de l'axe vertical (swipe vers le haut ou le bas)
-    if (diffY > 0) yDirection = 'down';
-    else if (diffY < 0) yDirection = 'up';
+    if (Math.abs(diffY) > threshold) {
+        yDirection = diffY > 0 ? 'down' : 'up';
+    }
 
     fetch(route + '?xDirection=' + xDirection + '&yDirection=' + yDirection)
         .then(function(response) {
-            if (response.ok) console.log('WALL-E a tourné sa tête.');
-            else console.log('Une erreur s\'est produite lors de l\'appel à /head dans la direction ' + direction + '.');
+            if (response.ok) console.log('WALL-E moved his head.');
+            else console.log('An error occurred while calling /moveHead.');
         })
 
         .then(function() {
@@ -273,6 +276,7 @@ var prevDy = 0;
 var nextDx = 0;
 var nextDy = 0;
 
+//Used to move WALL-E
 function updateMovement(dx, dy) {
     nextDx = dx;
     nextDy = dy;
@@ -289,13 +293,11 @@ function updateMovement(dx, dy) {
     const rightSensorValue = document.getElementById('rightSensor');
     const route = '/move';
 
-    console.log('move: ' + dx + ', ' + dy);
-
     Promise.all([
         fetch(route + '?xDirection=' + dx + '&yDirection=' + -dy)
             .then(function(response) {
-                if (response.ok) console.log('WALL-E a bougé.');
-                else console.log('Une erreur s\'est produite lors de l\'appel à /move dans la direction ' + direction + '.');
+                if (response.ok) console.log('WALL-E moved.');
+                else console.log('An error occurred while calling /move.');
             }),
 
         fetch('/getSensorsValue')
@@ -315,17 +317,16 @@ function updateMovement(dx, dy) {
     });
 }
 
-//Fonction allumer/éteindre lumière
+//Switch on/off light
 function switchLight() {
     const lightButton = document.getElementById('lightButton');
 
-    //Récupération état lumière
+    //Light state recovery
     fetch('/switchLight')
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
-            //Si lumière allumée
             if(data.light_on) {
                 console.log('Light on.');
                 lightButton.style.backgroundImage = 'url(\'static/images/bulbOn2.png\')';
@@ -338,7 +339,7 @@ function switchLight() {
         });
 }
 
-//Fonction afficher/cacher overlay IA
+//Show/hide AI overlay
 function switchAI(){
     const AIButton = document.getElementById('AIButton');
     const cameraDisplay = document.getElementById('cameraDisplay');
@@ -349,14 +350,14 @@ function switchAI(){
         AIButton.style.backgroundImage = 'url(\'static/images/AIOn2.png\')';
         cameraDisplay.src = '/showCameraWithAIOverlay';
 
-        console.log('Affichage caméra avec overlay.');
+        console.log('Camera display with overlay.');
     } else {
         AIOn = false;
 
         AIButton.style.backgroundImage = 'url(\'static/images/AIOff2.png\')';
         cameraDisplay.src = '/showCameraWithoutAIOverlay';
 
-        console.log('Affichage caméra sans overlay.');
+        console.log('Camera display without overlay.');
     }
 }
 
@@ -394,7 +395,6 @@ function switchOperatingMode(){
         });
 }
 
-//Fonction Bouger
 function move(direction, event) {
     event.preventDefault();
 
@@ -405,9 +405,9 @@ function move(direction, event) {
     fetch(route + '?direction=' + direction)
         .then(function(response) {
             if (response.ok) {
-                console.log('WALL-E a bougé.');
+                console.log('WALL-E moved.');
             } else {
-                console.log('Une erreur s\'est produite lors de l\'appel à /move dans la direction ' + direction + '.');
+                console.log('An error occurred while calling /move.');
             }
         });
 
@@ -424,7 +424,6 @@ function move(direction, event) {
         });
 }
 
-//Fonction Bouger bras
 function moveArm(arm, angle) {
     const route = '/moveArm';
 
@@ -434,12 +433,11 @@ function moveArm(arm, angle) {
 
     fetch(route + '?arm=' + arm + '&angle=' + angle)
         .then(function(response) {
-            if(response.ok) console.log('WALL-E a bougé un bras.');
-            else console.log('Une erreur s\'est produite lors de l\'appel à /moveArm à l\'angle ' + angle + '.');
+            if(response.ok) console.log('WALL-E moved an arm.');
+            else console.log('An error occurred while calling /moveArm.');
         });
 }
 
-//Fonction Lancer son
 function makeSound(soundNum) {
     var sound = document.getElementById('sound' + soundNum);
     var progressBar = document.getElementById('progressBar' + soundNum);
@@ -459,17 +457,17 @@ function makeSound(soundNum) {
 
     const route = '/makeSound';
 
-    fetch(route + '?sound=' + soundNum)
+    fetch(route + '?sound=' + soundNum + '&duration=' + soundDuration)
         .then(function(response) {
-            if(response.ok) console.log('WALL-E a lancé le son.');
-            else console.log('Une erreur s\'est produite lors de l\'appel à /makeSound.');
+            if(response.ok) console.log('WALL-E made the sound.');
+            else console.log('An error occurred while calling /makeSound.');
         });
 }
 
 function mouseCameraDragActiveListener(event){
     initialX = event.clientX;
     initialY = event.clientY;
-    isDragged = true;
+    cameraDragged = true;
 
     event.preventDefault();
 }
@@ -477,7 +475,7 @@ function mouseCameraDragActiveListener(event){
 function touchCameraDragActiveListener(event){
     initialX = event.touches[0].clientX;
     initialY = event.touches[0].clientY;
-    isDragged = true;
+    cameraDragged = true;
     
     event.preventDefault();
 }
@@ -503,3 +501,28 @@ function removeCameraDragActiveClass(){
         cameraDisplay.classList.remove('cameraDragActive');
     }
 }
+
+function updateBatteryPercent(){
+    const batteryProgress = document.getElementById('batteryProgress');
+    const batteryText = document.getElementById('batteryPercent');
+
+    //Battery percent recovery/display
+    fetch('/getBatteryPercent')
+        .then(function(response) {
+            return response.text();
+        })
+        .then(function(data) {            
+            var batteryPercent = parseInt(data);
+            var batteryHeight = batteryPercent * 18 / 100;
+
+            batteryProgress.style.height = batteryHeight + 'px';
+            batteryText.textContent = batteryPercent + '%';
+
+            //Battery color change
+            if(batteryPercent < 20) batteryProgress.style.background = 'red';
+            else batteryProgress.style.background = 'green';
+        });
+}
+
+//Battery percent display update (every minute)
+setInterval(updateBatteryPercent, 60000);
