@@ -10,49 +10,12 @@ First, you have to install an OS on the Raspberry. To operate the ```mediapipe``
 
 The first thing to do after installing the OS is to update it:
 
-```
-sudo apt-get update
-sudo apt-get upgrade
-```
-
 ### Installation of the libraries
-
-First, check that the correct version of Python is installed:
-
-```
-python --version
-```
-
-I personally used version 2.9.2 because it was the one that was installed on my OS originally. Higher versions should work, but I'm **not sure if 2.10 and higher will work** because of the ```mediapipe``` library.
 
 You must also activate the **I2C**, **SPI** and **Camera** interfaces in ```raspi-config```'s **Interfacing Options**:
 
 ```
 sudo raspi-config
-```
-
-Now you need to install the following libraries:
-
-- **flask**: used for the web server
-- **pyyaml**: used for the web server
-- **pygame**: used to produce the sounds
-- **smbus**: used by the HAT library
-- **smbus2**: used by the ADC library
-- **opencv-python**: used for the auto mode and the camera overlay
-- **opencv-contrib-python**: used for the auto mode and the camera overlay
-- **mediapipe**: used for the auto mode and the camera overlay
-- **Adafruit_GPIO.SPI**: used by the screen libraries
-
-```
-pip install flask
-pip install pyyaml
-pip install pygame
-pip install smbus
-pip install smbus2
-pip install opencv-python
-pip install opencv-contrib-python
-pip install mediapipe
-pip install Adafruit_GPIO
 ```
 
 ## Setting up the web server
@@ -142,3 +105,18 @@ After installing RaspAP and opening port 22, restart the Raspberry and configure
 - **Password**: secret
 
 You can change the wifi SSID and password as well as the credentials to access the RaspAP web interface. However, you will now need to **SSH** in with ```10.3.141.1``` and access the **web interface** with ```10.3.141.1:5000```.
+
+
+
+
+**Installer rosbridge_server**
+sudo apt install -y ros-humble-rosbridge-server ros-humble-vision-opencv ros-humble-rosidl-generator-py python3-rosdep2
+
+**Build le package**
+colcon build --packages-select wall_e_core
+source install/setup.bash
+
+echo "install/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+
+ros2 launch wall_e_core wall_e_launch.py

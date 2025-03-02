@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>wall_e_core</name>
+  <version>1.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="marcguedon@gmail.com">marc</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rosidl_default_generators</depend>
+  <depend>rosidl_default_runtime</depend>
+  <depend>rosidl_generator_py</depend>
+  <depend>rosidl_runtime_py</depend>
+  <depend>rclpy</depend>
+  <depend>wall_e_msg_srv</depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <exec_depend>rosbridge_server</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+    <launch>
+      <launch_file>launch/wall_e_launch.py</launch_file>
+    </launch>
+  </export>
+</package>
+

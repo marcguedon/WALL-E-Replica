@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <script src="js/roslib.js"></script>
+		<script type="text/javascript" src="js/app.js"></script>
+		<title>WALL-E interface</title>
+	</head>
+
+	<body>
+        <img class="wall-e" alt="WALL-E image" src="images/wall-e.png">
+        <div class="title">
+            <h1>WALL-E</h1>
+            <h1>INTERFACE</h1>
+        </div>
+        
+        <div class="menu">
+            <div class="line one">
+                <div class="informationsSection">
+                    <h3>INFORMATIONS</h3>
+                    <div class="data">
+                        <div class="battery">
+                            <div class="batteryImage">
+                                <img alt="Battery" src="images/battery.png">
+                                <div id="batteryProgress"></div>
+                            </div>
+                            <p id="batteryPercent"></p>
+                        </div>
+                        <div class="action">
+                            <p>Walking...</p>
+                        </div>
+                        <div class="sensors">
+                            <p id="leftSensor"></p>
+                            <p id="rightSensor"></p>
+                            <p id="frontSensor"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cameraSection">
+                    <h3>CAMERA</h3>
+                    <div class="display">
+                        <div class="camera">
+                            <img id="cameraDisplay" alt="Camera display" draggable="false">
+                            <div class="cameraControls">
+                                <button id="AIButton" class="cameraButton" title="SWITCH AI ON/OFF" onclick="switch_ai()"></button>
+                                <button id="lightButton" class="cameraButton" title="SWITCH CAMERA LIGHT ON/OFF" onclick="switch_light()"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="line two">
+                <div class="soundboardSection">
+                    <h3>SOUNDBOARD</h3>
+                    <div class="soundsGrid">
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(1)">
+                            <audio id="sound1">
+                                <source src="sounds/sound1.mp3'" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar1"></div>
+                            <span class="buttonText">WALL-E</span>
+                        </button>
+
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(2)">
+                            <audio id="sound2">
+                                <source src="sounds/sound2.mp3" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar2"></div>
+                            <span class="buttonText">Ta Da !</span>
+                        </button>
+
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(3)">
+                            <audio id="sound3">
+                                <source src="sounds/sound3.mp3" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar3"></div>
+                            <span class="buttonText">Huh</span>
+                        </button>
+
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(4)">
+                            <audio id="sound4">
+                                <source src="sounds/sound4.mp3" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar4"></div>
+                            <span class="buttonText">Here</span>
+                        </button>
+
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(5)">
+                            <audio id="sound5">
+                                <source src="sounds/sound5.mp3" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar5"></div>
+                            <span class="buttonText">Aw !</span>
+                        </button>
+
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(6)">
+                            <audio id="sound6">
+                                <source src="sounds/sound6.mp3" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar6"></div>
+                            <span class="buttonText">Hu ho !</span>
+                        </button>
+
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(7)">
+                            <audio id="sound7">
+                                <source src="sounds/sound7.mp3" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar7"></div>
+                            <span class="buttonText">(Screaming)</span>
+                        </button>
+
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(8)">
+                            <audio id="sound8">
+                                <source src="sounds/sound8.mp3" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar8"></div>
+                            <span class="buttonText">(Inhaling)</span>
+                        </button>
+                        
+                        <button class="soundButton" title="MAKE SOUND" onclick="play_sound(9)">
+                            <audio id="sound9">
+                                <source src="sounds/sound9.mp3" type="audio/mpeg">
+                            </audio>
+                            <div class="progressBar" id="progressBar9"></div>
+                            <span class="buttonText">(Exhaling)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="controlsSection">
+                    <h3>MOVEMENTS</h3>
+                    <div class="shifting">
+                        <div class="mode">
+                            <p>MANUAL</p>
+                            <label title="ENABLE/DISABLE AUTO MODE" class="switch">
+                                <input type="checkbox" id="autoCheckbox" onchange="switch_operating_mode()">
+                                <span class="slider round"></span>
+                            </label>
+                            <p>AUTO</p>
+                        </div>
+
+                        <div class="movements">
+                            <div class="joystick" id="movementStick">
+                                <svg><line class="joystickLine" stroke="#CCCCCC" x1="50%" y1="50%" x2="50%" y2="50%" stroke-width="5px" stroke-linecap="round"/></svg>
+                                <div class="joystickHead">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="arms">
+                            <input id="leftArm" class="armSlider" type="range" oninput="move_arm('left', this.value)" orient="vertical" title="MOVE UP/DOWN LEFT ARM" min="40" max="140" value="0">
+                            <input id="rightArm" class="armSlider" type="range" oninput="move_arm('right', this.value)" orient="vertical" title="MOVE UP/DOWN RIGHT ARM" min="40" max="140" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <footer>
+                <p>Author : Marc GUEDON / Website : </p><a href="http://thedraill.e-monsite.com/" target="_blank">http://thedraill.e-monsite.com/</a>
+            </footer>
+        </div>
+    </body>
+</html>
