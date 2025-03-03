@@ -5,18 +5,11 @@
   <version>1.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="marcguedon@gmail.com">marc</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
-
-  <depend>rosidl_default_generators</depend>
   <depend>rosidl_default_runtime</depend>
-  <depend>rosidl_generator_py</depend>
-  <depend>rosidl_runtime_py</depend>
   <depend>rclpy</depend>
   <depend>wall_e_msg_srv</depend>
-
-  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <exec_depend>rosbridge_server</exec_depend>
 

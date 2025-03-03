@@ -1,4 +1,4 @@
-FROM ros:humble-ros-core
+FROM osrf/ros:humble-ros-base
 
 RUN apt-get update
 RUN apt-get install -y python3-opencv python3-smbus python3-pygame python3-pip

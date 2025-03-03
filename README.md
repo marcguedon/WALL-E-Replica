@@ -109,6 +109,10 @@ You can change the wifi SSID and password as well as the credentials to access t
 
 
 
+
+
+https://docs.docker.com/engine/install/debian/#install-using-the-repository
+
 **Installer rosbridge_server**
 sudo apt install -y ros-humble-rosbridge-server ros-humble-vision-opencv ros-humble-rosidl-generator-py python3-rosdep2
 
@@ -120,3 +124,5 @@ echo "install/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 
 ros2 launch wall_e_core wall_e_launch.py
+
+# TODO Tester cette librairie:  pip install adafruit-circuitpython-ads1x15

@@ -1,22 +1,21 @@
 import launch
 import launch_ros.actions
-import os
-from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    web_server_node = launch_ros.actions.Node(
-        package="wall_e_core",
-        executable="web_server_node",
-        name="web_server_node",
-        output="screen",
-    )
     rosbridge_node = launch_ros.actions.Node(
         package="rosbridge_server",
         executable="rosbridge_websocket",
         name="rosbridge",
         output="screen",
         parameters=[{"port": 9090}],
+    )
+
+    web_server_node = launch_ros.actions.Node(
+        package="wall_e_core",
+        executable="web_server_node",
+        name="web_server_node",
+        output="screen",
     )
     screen_node = launch_ros.actions.Node(
         package="wall_e_core", executable="screen_node", name="screen_node"
@@ -47,8 +46,8 @@ def generate_launch_description():
 
     return launch.LaunchDescription(
         [
-            web_server_node,
             rosbridge_node,
+            web_server_node,
             screen_node,
             battery_node,
             soundbox_node,
