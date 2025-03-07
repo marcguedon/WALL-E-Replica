@@ -3,6 +3,8 @@ import rclpy
 from rclpy.node import Node
 from wall_e_msg_srv.srv import SetIntensity
 
+GPIO.setwarnings(False)
+
 
 class Light:
     def __init__(self, bcm_pin: int, is_default_on: bool):

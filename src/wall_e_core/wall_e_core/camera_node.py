@@ -1,6 +1,8 @@
 import cv2
 import mediapipe as mp
 import rclpy
+import ffmpeg
+import numpy as np
 from rclpy.node import Node
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
@@ -10,24 +12,36 @@ DEFAULT_CAMERA_INDEX = 0
 
 
 class Camera:
-    def __init__(self, camera_index: int = DEFAULT_CAMERA_INDEX):
+    def __init__(self, camera_index: int = DEFAULT_CAMERA_INDEX, logger=None):
         """Captures pictures to display it with or without AI overlay
 
         Args:
             camera_index (int, optional): Index of the camera. Defaults to DEFAULT_CAMERA_INDEX.
         """
-        self.camera = cv2.VideoCapture(camera_index)
+        self.logger = logger
+
         self.display_ai_overlay = False
         self.mp_hands = mp.solutions.hands.Hands()
 
+        self.process = (
+            ffmpeg.input("/tmp/video_stream.h264")
+            .output("pipe:1", format="rawvideo", pix_fmt="bgr24")
+            .run_async(pipe_stdout=True, pipe_stderr=True)
+        )
+
     def get_camera_capture(self):
-        ret, frame = self.camera.read()
-        if not ret:
-            self.get_logger().info(f"Image capture error")
+        in_bytes = self.process.stdout.read(640 * 480 * 3)
+
+        if len(in_bytes) < 640 * 480 * 3:
             return
 
+        data = np.frombuffer(in_bytes, np.uint8).reshape([480, 640, 3])
+
+        if self.logger:
+            self.logger.info(f"Frame shape: {data.shape}%")
+
         if self.display_ai_overlay:
-            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            image = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
 
             results = self.mp_hands.process(image)
 
@@ -35,43 +49,39 @@ class Camera:
             if results.multi_hand_landmarks:
                 for hand_landmarks in results.multi_hand_landmarks:
                     for landmark in hand_landmarks.landmark:
-                        x = min(int(landmark.x * frame.shape[1]), frame.shape[1] - 1)
-                        y = min(int(landmark.y * frame.shape[0]), frame.shape[0] - 1)
-                        cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
+                        x = min(int(landmark.x * data.shape[1]), data.shape[1] - 1)
+                        y = min(int(landmark.y * data.shape[0]), data.shape[0] - 1)
+                        cv2.circle(data, (x, y), 5, (0, 255, 0), -1)
 
                     connections = mp.solutions.holistic.HAND_CONNECTIONS
                     for connection in connections:
                         x0 = min(
                             int(
-                                hand_landmarks.landmark[connection[0]].x
-                                * frame.shape[1]
+                                hand_landmarks.landmark[connection[0]].x * data.shape[1]
                             ),
-                            frame.shape[1] - 1,
+                            data.shape[1] - 1,
                         )
                         y0 = min(
                             int(
-                                hand_landmarks.landmark[connection[0]].y
-                                * frame.shape[0]
+                                hand_landmarks.landmark[connection[0]].y * data.shape[0]
                             ),
-                            frame.shape[0] - 1,
+                            data.shape[0] - 1,
                         )
                         x1 = min(
                             int(
-                                hand_landmarks.landmark[connection[1]].x
-                                * frame.shape[1]
+                                hand_landmarks.landmark[connection[1]].x * data.shape[1]
                             ),
-                            frame.shape[1] - 1,
+                            data.shape[1] - 1,
                         )
                         y1 = min(
                             int(
-                                hand_landmarks.landmark[connection[1]].y
-                                * frame.shape[0]
+                                hand_landmarks.landmark[connection[1]].y * data.shape[0]
                             ),
-                            frame.shape[0] - 1,
+                            data.shape[0] - 1,
                         )
-                        cv2.line(frame, (x0, y0), (x1, y1), (0, 255, 0), 2)
+                        cv2.line(data, (x0, y0), (x1, y1), (0, 255, 0), 2)
 
-        return frame
+        return data
 
     def switch_ai(self, display_ai: bool):
         """Switches on/off the AI overlay of the camera
@@ -99,7 +109,7 @@ class CameraNode(Node):
         """
         super().__init__("camera_node")
 
-        self.camera = Camera()
+        self.camera = Camera(self.get_logger())
         self.framerate = framerate
         self.bridge = CvBridge()
 
@@ -117,19 +127,22 @@ class CameraNode(Node):
         """Capture et publie une image"""
         frame = self.camera.get_camera_capture()
 
-        ret, jpeg_frame = cv2.imencode(".jpg", frame)
-        if ret:
-            msg = Image()
-            msg.header.stamp = self.get_clock().now().to_msg()
-            msg.header.frame_id = "camera"
-            msg.height = frame.shape[0]
-            msg.width = frame.shape[1]
-            msg.encoding = "jpeg"
-            msg.is_bigendian = 0
-            msg.step = frame.shape[1] * 3
-            msg.data = jpeg_frame.tobytes()
+        if frame is None or frame.size == 0:
+            return
 
-            self.frame_publisher.publish(msg)
+        ret, jpeg_frame = cv2.imencode(".jpg", frame)
+
+        msg = Image()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "camera"
+        msg.height = frame.shape[0]
+        msg.width = frame.shape[1]
+        msg.encoding = "jpeg"
+        msg.is_bigendian = 0
+        msg.step = frame.shape[1] * 3
+        msg.data = jpeg_frame.tobytes()
+
+        self.frame_publisher.publish(msg)
 
     def destroy_node(self):
         """Libère la caméra lors de l'arrêt du node"""

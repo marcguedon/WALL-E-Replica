@@ -5,9 +5,9 @@ import threading
 import os
 from rclpy.node import Node
 
-PORT = 8000
+PORT = 80
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
-WORKSPACE_DIR = os.path.abspath(os.path.join(PACKAGE_DIR, "../../../../../.."))
+WORKSPACE_DIR = os.path.abspath(os.path.join(PACKAGE_DIR, "../../../../../../.."))
 WEB_DIR = os.path.join(WORKSPACE_DIR, "web_server")
 
 if not os.path.exists(WEB_DIR):

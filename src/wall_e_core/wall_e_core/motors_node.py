@@ -1,29 +1,40 @@
+import board
 import rclpy
+from numpy import sqrt
 from rclpy.node import Node
-from PCA9685 import PCA9685
-from numpy import sqrt, min, abs
+from adafruit_pca9685 import PCA9685
 from wall_e_msg_srv.srv import Move
 
 
 class Motor:
-    def __init__(self, driver, pwm: int, in1: int, in2: int):
-        self.driver = driver
+    def __init__(self, pca, pwm: int, in1: int, in2: int, logger=None):
+        self.pca = pca
         self.pwm = pwm
         self.in1 = in1
         self.in2 = in2
+        self.logger = logger
 
     def run(self, speed: float):
         if speed == 0:
-            self.driver.setDutycycle(self.pwm, 0)
+            self.pca.channels[self.pwm].duty_cycle = 0x0000
             return
 
-        abs_speed = min([abs(speed), 1])
-        speed_pct = abs_speed * 100
-        forward = speed > 0
+        abs_speed = min(abs(speed), 1)
+        speed_pct = int(abs_speed * 4095)  # PWM range for PCA9685 is 0 to 4095
+        forward = speed > 0 
 
-        self.driver.setDutycycle(self.pwm, speed_pct)
-        self.driver.setLevel(self.in1, not forward)
-        self.driver.setLevel(self.in2, forward)
+        if self.logger:
+            self.logger.info(f"Motor running at speed: {speed_pct}%")
+
+        self.pca.channels[self.pwm].duty_cycle = speed_pct
+
+        # Control direction using IN1 and IN2
+        if forward:
+            self.pca.channels[self.in1].duty_cycle = 0x0000
+            self.pca.channels[self.in2].duty_cycle = 0xFFFF
+        else:
+            self.pca.channels[self.in1].duty_cycle = 0xFFFF
+            self.pca.channels[self.in2].duty_cycle = 0x0000
 
 
 DEFAULT_DRIVER_ADR = 0x40
@@ -38,15 +49,15 @@ DEFAULT_B_IN2 = 4
 class MotorsNode(Node):
     def __init__(self):
         super().__init__("motors_node")
-
-        self.driver = PCA9685(DEFAULT_DRIVER_ADR, debug=False)
-        self.driver.setPWMFreq(50)
+        i2c = board.I2C()
+        self.pca = PCA9685(i2c, address=DEFAULT_DRIVER_ADR)
+        self.pca.frequency = 60
 
         self.left_motor = Motor(
-            self.driver, DEFAULT_A_PWM, DEFAULT_A_IN1, DEFAULT_A_IN2
+            self.pca, DEFAULT_A_PWM, DEFAULT_A_IN1, DEFAULT_A_IN2, self.get_logger()
         )
         self.right_motor = Motor(
-            self.driver, DEFAULT_B_PWM, DEFAULT_B_IN1, DEFAULT_B_IN2
+            self.pca, DEFAULT_B_PWM, DEFAULT_B_IN1, DEFAULT_B_IN2, self.get_logger()
         )
 
         self.move_srv = self.create_service(Move, "move", self.move_callback)
@@ -80,6 +91,7 @@ class MotorsNode(Node):
                 self.run_motors(y_direction, signed_magnitude)
 
     def move_callback(self, request, response):
+        # self.get_logger().info(f"move_callback service is called")
         self.move(request.x_direction, request.y_direction)
 
         response.success = True

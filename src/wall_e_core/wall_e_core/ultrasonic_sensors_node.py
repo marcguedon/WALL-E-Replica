@@ -1,8 +1,10 @@
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int32MultiArray
+from std_msgs.msg import Float32MultiArray
+
+GPIO.setwarnings(False)
 
 BCM_LEFT_TRIG_PIN = 17
 BCM_LEFT_ECHO_PIN = 18
@@ -61,11 +63,11 @@ class UltrasonicSensorsPublisher(Node):
         ]
         self.rate = rate
 
-        self.publisher = self.create_publisher(Int32MultiArray, "distances_topic", 10)
+        self.publisher = self.create_publisher(Float32MultiArray, "distances_topic", 10)
         self.timer = self.create_timer(1.0 / self.rate, self.publish_distances)
 
     def publish_distances(self):
-        msg = Int32MultiArray()
+        msg = Float32MultiArray()
         msg.data = [sensor.get_distance() for sensor in self.sensors]
         self.publisher.publish(msg)
         # self.get_logger().info(f"Message published : {msg.data}")

@@ -1,20 +1,19 @@
 // ROS client initialization
 var ros = new ROSLIB.Ros({
-    url: 'ws://localhost:9090'
+  url: "ws://" + window.location.hostname + ":9090/",
 });
 
-ros.on('connection', function() {
-    console.log('Connected to ROSBridge');
+ros.on("connection", function () {
+  console.log("Connected to ROSBridge");
 });
 
-ros.on('error', function(error) {
-    console.error('Connection error to ROSBridge: ', error);
+ros.on("error", function (error) {
+  console.error("Connection error to ROSBridge: ", error);
 });
 
-ros.on('close', function() {
-    console.log('Disconnected from ROSBridge');
+ros.on("close", function () {
+  console.log("Disconnected from ROSBridge");
 });
-
 
 var ai_on = false;
 var light_on = false;
@@ -24,202 +23,208 @@ var camera_dragged = false;
 var joystick_dragged = false;
 
 // Web page initialization
-document.addEventListener('DOMContentLoaded', function() {
-    const checkbox = document.getElementById('autoCheckbox');
-    const movement_stick = document.getElementById('movementStick');
-    const arm_sliders = Array.from(document.getElementsByClassName('armSlider'));
-    const light_button = document.getElementById('lightButton');
+document.addEventListener("DOMContentLoaded", function () {
+  const checkbox = document.getElementById("autoCheckbox");
+  const movement_stick = document.getElementById("movementStick");
+  const arm_sliders = Array.from(document.getElementsByClassName("armSlider"));
+  const light_button = document.getElementById("lightButton");
 
-    // //Activated mode recovery/display
-    // fetch('/getOperatingMode')
-    //     .then(function(response) {
-    //         return response.json();
-    //     })
-    //     .then(function(data) {
-    //         //If auto mode activated, manual buttons disable
-    //         if (data.auto_mode) {
-    //             remove_camera_drag_active_class();
-    //             checkbox.checked = true;
-    //             light_button.disabled = true;
-    //             movement_stick.add('disabled');
+  // //Activated mode recovery/display
+  // fetch('/getOperatingMode')
+  //     .then(function(response) {
+  //         return response.json();
+  //     })
+  //     .then(function(data) {
+  //         //If auto mode activated, manual buttons disable
+  //         if (data.auto_mode) {
+  //             remove_camera_drag_active_class();
+  //             checkbox.checked = true;
+  //             light_button.disabled = true;
+  //             movement_stick.add('disabled');
 
-    //             arm_sliders.forEach(function(slider) {
-    //                 slider.disabled = true;
-    //                 slider.value = 0;
-    //             });
+  //             arm_sliders.forEach(function(slider) {
+  //                 slider.disabled = true;
+  //                 slider.value = 0;
+  //             });
 
-    //             console.log('WALL-E is in auto mode.');
-    //         }
-            
-    //         //If manual mode activated, manual buttons activation
-    //         else {
-    //             set_camera_drag_active_class();
-    //             checkbox.checked = false;
-    //             light_button.disabled = false;
-    //             movement_stick.classList.remove('disabled');
+  //             console.log('WALL-E is in auto mode.');
+  //         }
 
-    //             arm_sliders.forEach(function(slider) {
-    //                 slider.disabled = false;
-    //             });
+  //         //If manual mode activated, manual buttons activation
+  //         else {
+  //             set_camera_drag_active_class();
+  //             checkbox.checked = false;
+  //             light_button.disabled = false;
+  //             movement_stick.classList.remove('disabled');
 
-    //             console.log('WALL-E is in manual mode.');
-    //         }
-    //     });
+  //             arm_sliders.forEach(function(slider) {
+  //                 slider.disabled = false;
+  //             });
 
-    // //Light state recovery
-    // fetch('/getLightState')
-    //     .then(function(response) {
-    //         return response.json();
-    //     })
-    //     .then(function(data) {
-    //         if(data.light_on) light_button.style.backgroundImage = 'url(\'images/bulbOn2.png\')';
-    //         else light_button.style.backgroundImage = 'url(\'images/bulbOff2.png\')';
-    //     });
+  //             console.log('WALL-E is in manual mode.');
+  //         }
+  //     });
 
-    //Used to move WALL-E's head
-    document.addEventListener('mousemove', function(event) {
-        if (!camera_dragged) return;
+  // //Light state recovery
+  // fetch('/getLightState')
+  //     .then(function(response) {
+  //         return response.json();
+  //     })
+  //     .then(function(data) {
+  //         if(data.light_on) light_button.style.backgroundImage = 'url(\'images/bulbOn2.png\')';
+  //         else light_button.style.backgroundImage = 'url(\'images/bulbOff2.png\')';
+  //     });
 
-        //Prevent page scrolling when dragging
-        event.preventDefault();
+  //Used to move WALL-E's head
+  document.addEventListener("mousemove", function (event) {
+    if (!camera_dragged) return;
 
-        move_head(event.clientX, event.clientY);
-    });
+    //Prevent page scrolling when dragging
+    event.preventDefault();
 
-    //Used to move WALL-E's head
-    document.addEventListener('touchmove', function(event) {
-        if (!camera_dragged) return;
+    move_head(event.clientX, event.clientY);
+  });
 
-        //Prevent page scrolling when dragging
-        event.preventDefault();
+  //Used to move WALL-E's head
+  document.addEventListener("touchmove", function (event) {
+    if (!camera_dragged) return;
 
-        move_head(event.touches[0].clientX, event.touches[0].clientY);
-    });
-    
-    //Used to move WALL-E's head
-    document.addEventListener('mouseup', function(event) {
-        camera_dragged = false;
-    });
+    //Prevent page scrolling when dragging
+    event.preventDefault();
 
-    //Used to move WALL-E's head
-    document.addEventListener('touchend', function(event) {
-        camera_dragged = false;
-    });
+    move_head(event.touches[0].clientX, event.touches[0].clientY);
+  });
 
-    joystick_head = movement_stick.getElementsByClassName('joystickHead')[0];
-    joystick_line = movement_stick.getElementsByClassName('joystickLine')[0];
+  //Used to move WALL-E's head
+  document.addEventListener("mouseup", function (event) {
+    camera_dragged = false;
+  });
 
-    //Used to move WALL-E
-    let handle_joystick = function(clientX, clientY) {
-        //Get the bounding rectangles of the movement stick and joystick head
-        let rect = movement_stick.getBoundingClientRect();
-        let head_rect = joystick_head.getBoundingClientRect();
+  //Used to move WALL-E's head
+  document.addEventListener("touchend", function (event) {
+    camera_dragged = false;
+  });
 
-        let ratio = 0.25;
+  joystick_head = movement_stick.getElementsByClassName("joystickHead")[0];
+  joystick_line = movement_stick.getElementsByClassName("joystickLine")[0];
 
-        //Calculate offset based on the joystick head's dimensions and ratio
-        let offset_width = head_rect.width * (ratio - 0.5);
-        let offset_height = head_rect.height * (ratio - 0.5);
+  //Used to move WALL-E
+  let handle_joystick = function (clientX, clientY) {
+    //Get the bounding rectangles of the movement stick and joystick head
+    let rect = movement_stick.getBoundingClientRect();
+    let head_rect = joystick_head.getBoundingClientRect();
 
-        //Calculate the half-width and half-height of the joystick's effective area
-        let half_width = rect.width / 2 + offset_width;
-        let half_height = rect.height / 2 + offset_height;
+    let ratio = 0.25;
 
-        //Calculate normalized delta values for X and Y movement
-        let dx = (clientX - rect.left + offset_width) / half_width - 1;
-        let dy = (clientY - rect.top + offset_height) / half_height - 1;
+    //Calculate offset based on the joystick head's dimensions and ratio
+    let offset_width = head_rect.width * (ratio - 0.5);
+    let offset_height = head_rect.height * (ratio - 0.5);
 
-        //Calculate the squared radius of the movement vector
-        let radius_squared = dx * dx + dy * dy;
+    //Calculate the half-width and half-height of the joystick's effective area
+    let half_width = rect.width / 2 + offset_width;
+    let half_height = rect.height / 2 + offset_height;
 
-        //If the radius squared is greater than 1, normalize the vector
-        if (radius_squared > 1) {
-            let radius = Math.sqrt(radius_squared);
-            dx /= radius;
-            dy /= radius;
-        }
+    //Calculate normalized delta values for X and Y movement
+    let dx = (clientX - rect.left + offset_width) / half_width - 1;
+    let dy = (clientY - rect.top + offset_height) / half_height - 1;
 
-        //Calculate new positions for the joystick head and line
-        let new_x = (dx + 1) * half_width - offset_width;
-        let new_y = (dy + 1) * half_height - offset_height;
-        
-        //Update the joystick head's position and the line's end point
-        joystick_head.style.left = new_x + 'px';
-        joystick_head.style.top = new_y + 'px';
-        joystick_line.setAttribute('x2', new_x + 'px');
-        joystick_line.setAttribute('y2', new_y + 'px');
+    //Calculate the squared radius of the movement vector
+    let radius_squared = dx * dx + dy * dy;
 
-        update_movement(dx, dy);
-    };
-    
-    //Used to move WALL-E
-    document.addEventListener('mouseup', function(event) {
-        if (!joystick_dragged) return;
+    //If the radius squared is greater than 1, normalize the vector
+    if (radius_squared > 1) {
+      let radius = Math.sqrt(radius_squared);
+      dx /= radius;
+      dy /= radius;
+    }
 
-        movement_stick.classList.remove('dragging');
-        joystick_dragged = false;
-        joystick_head.style.left = '50%';
-        joystick_head.style.top = '50%';
+    //Calculate new positions for the joystick head and line
+    let new_x = (dx + 1) * half_width - offset_width;
+    let new_y = (dy + 1) * half_height - offset_height;
 
-        joystick_line.setAttribute('x2', '50%');
-        joystick_line.setAttribute('y2', '50%');
-        update_movement(0, 0);
-    });
+    //Update the joystick head's position and the line's end point
+    joystick_head.style.left = new_x + "px";
+    joystick_head.style.top = new_y + "px";
+    joystick_line.setAttribute("x2", new_x + "px");
+    joystick_line.setAttribute("y2", new_y + "px");
 
-    //Used to move WALL-E
-    document.addEventListener('touchend', function(event) {
-        if (!joystick_dragged) return;
+    update_movement(dx, dy);
+  };
 
-        movement_stick.classList.remove('dragging');
-        joystick_dragged = false;
-        joystick_head.style.left = '50%';
-        joystick_head.style.top = '50%';
-        
-        joystick_line.setAttribute('x2', '50%');
-        joystick_line.setAttribute('y2', '50%');
-        update_movement(0, 0);
-    });
+  //Used to move WALL-E
+  document.addEventListener("mouseup", function (event) {
+    if (!joystick_dragged) return;
 
-    //Used to move WALL-E
-    movement_stick.onmousedown = function(event) {
-        event.preventDefault();
+    movement_stick.classList.remove("dragging");
+    joystick_dragged = false;
+    joystick_head.style.left = "50%";
+    joystick_head.style.top = "50%";
 
-        if(event.button === 2) return;
-        if(movement_stick.classList.contains('disabled')) return;
+    joystick_line.setAttribute("x2", "50%");
+    joystick_line.setAttribute("y2", "50%");
+    update_movement(0, 0);
+  });
 
-        movement_stick.classList.add('dragging');
-        joystick_dragged = true;
-        handle_joystick(event.clientX, event.clientY);
-    };
+  //Used to move WALL-E
+  document.addEventListener("touchend", function (event) {
+    if (!joystick_dragged) return;
 
-    //Used to move WALL-E
-    movement_stick.ontouchstart = function(event) {
-        event.preventDefault();
-        
-        if (movement_stick.classList.contains('disabled')) return;
+    movement_stick.classList.remove("dragging");
+    joystick_dragged = false;
+    joystick_head.style.left = "50%";
+    joystick_head.style.top = "50%";
 
-        movement_stick.classList.add('dragging');
-        joystick_dragged = true;
-        handle_joystick(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
-    };
+    joystick_line.setAttribute("x2", "50%");
+    joystick_line.setAttribute("y2", "50%");
+    update_movement(0, 0);
+  });
 
-    //Used to move WALL-E
-    document.addEventListener('mousemove', function(event) {
-        if (!joystick_dragged) return;
+  //Used to move WALL-E
+  movement_stick.onmousedown = function (event) {
+    event.preventDefault();
 
-        event.preventDefault();
+    if (event.button === 2) return;
+    if (movement_stick.classList.contains("disabled")) return;
 
-        handle_joystick(event.clientX, event.clientY);
-    });
+    movement_stick.classList.add("dragging");
+    joystick_dragged = true;
+    handle_joystick(event.clientX, event.clientY);
+  };
 
-    //Used to move WALL-E
-    document.addEventListener('touchmove', function(event) {
-        if (!joystick_dragged) return;
+  //Used to move WALL-E
+  movement_stick.ontouchstart = function (event) {
+    event.preventDefault();
 
-        event.preventDefault();
+    if (movement_stick.classList.contains("disabled")) return;
 
-        handle_joystick(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
-    });
+    movement_stick.classList.add("dragging");
+    joystick_dragged = true;
+    handle_joystick(
+      event.targetTouches[0].clientX,
+      event.targetTouches[0].clientY
+    );
+  };
+
+  //Used to move WALL-E
+  document.addEventListener("mousemove", function (event) {
+    if (!joystick_dragged) return;
+
+    event.preventDefault();
+
+    handle_joystick(event.clientX, event.clientY);
+  });
+
+  //Used to move WALL-E
+  document.addEventListener("touchmove", function (event) {
+    if (!joystick_dragged) return;
+
+    event.preventDefault();
+
+    handle_joystick(
+      event.targetTouches[0].clientX,
+      event.targetTouches[0].clientY
+    );
+  });
 });
 
 // //Fonction activation/désactivation checkbox
@@ -265,52 +270,50 @@ var move_head_next_dy = 0;
 const threshold = 5;
 
 var move_head_service = new ROSLIB.Service({
-    ros: ros,
-    name: '/move_head',
-    serviceType: 'wall_e_msg_srv/MoveHead'
+  ros: ros,
+  name: "/move_head",
+  serviceType: "wall_e_msg_srv/MoveHead",
 });
 
 function move_head(current_x, current_y) {
-    move_head_next_dx = current_x;
-    move_head_next_dy = current_y;
+  move_head_next_dx = current_x;
+  move_head_next_dy = current_y;
 
-    if (move_head_request_running) return;
-    if (move_head_prev_dx === move_head_next_dx && move_head_prev_dy === move_head_next_dy) return;
+  if (move_head_request_running) return;
+  if (
+    move_head_prev_dx === move_head_next_dx &&
+    move_head_prev_dy === move_head_next_dy
+  )
+    return;
 
-    move_head_request_running = true;
+  move_head_request_running = true;
 
-    move_head_prev_dx = move_head_next_dx;
-    move_head_prev_dy = move_head_next_dy;
+  move_head_prev_dx = move_head_next_dx;
+  move_head_prev_dy = move_head_next_dy;
 
-    const route = '/moveHead';
+  const route = "/moveHead";
 
-    var diff_x = initial_x - current_x;
-    var diff_y = initial_y - current_y;
+  var diff_x = initial_x - current_x;
+  var diff_y = initial_y - current_y;
 
-    var x_direction = 'none';
-    var y_direction = 'none';
+  var x_direction = "none";
+  var y_direction = "none";
 
-    if (Math.abs(diff_x) > threshold) {
-        x_direction = diff_x > 0 ? 'right' : 'left';
-    }
+  if (Math.abs(diff_x) > threshold) x_direction = diff_x > 0 ? "right" : "left";
 
-    if (Math.abs(diff_y) > threshold) {
-        y_direction = diff_y > 0 ? 'down' : 'up';
-    }
+  if (Math.abs(diff_y) > threshold) y_direction = diff_y > 0 ? "down" : "up";
 
-    var request = new ROSLIB.ServiceRequest({
-        x_direction: x_direction,
-        y_direction: y_direction,
-    });
+  var request = new ROSLIB.ServiceRequest({
+    x_direction: x_direction,
+    y_direction: y_direction,
+  });
 
-    move_head_service.callService(request, function(result) {
-        if (result.success) {
-            move_head_request_running = false;
-            console.log('WALL-E switched moved head with success.');
-        } else {
-            console.log('Error while moving head.');
-        }
-    });
+  move_head_service.callService(request, function (result) {
+    if (result.success) {
+      move_head_request_running = false;
+      console.log("WALL-E switched moved head with success.");
+    } else console.log("Error while moving head.");
+  });
 }
 
 var move_request_running = false;
@@ -320,280 +323,284 @@ var next_dx = 0;
 var next_dy = 0;
 
 var move_service = new ROSLIB.Service({
-    ros: ros,
-    name: '/move',
-    serviceType: 'wall_e_msg_srv/Move'
+  ros: ros,
+  name: "/move",
+  serviceType: "wall_e_msg_srv/Move",
 });
 
 //Used to move WALL-E
 function update_movement(dx, dy) {
-    next_dx = dx;
-    next_dy = dy;
+  //   console.log("update_movement service function is called");
+  next_dx = dx;
+  next_dy = dy;
 
-    // Prevent multiple requests
-    if (move_request_running) return;
-    if (prev_dx === next_dx && prev_dy === next_dy) return;
+  // Prevent multiple requests
+  if (move_request_running) return;
+  if (prev_dx === next_dx && prev_dy === next_dy) return;
 
-    move_request_running = true;
+  move_request_running = true;
 
-    prev_dx = next_dx;
-    prev_dy = next_dy;
+  prev_dx = next_dx;
+  prev_dy = next_dy;
 
-    var request = new ROSLIB.ServiceRequest({
-        x_direction: next_dx,
-        y_direction: next_dy,
-    });
+  var request = new ROSLIB.ServiceRequest({
+    x_direction: next_dx,
+    y_direction: next_dy,
+  });
 
-    move_service.callService(request, function(result) {
-        if (result.success) {
-            move_request_running = false;
-            console.log('WALL-E moved with success.');
-        } else {
-            console.log('Error while moving.');
-        }
-    });
+  move_service.callService(request, function (result) {
+    if (result.success) {
+      move_request_running = false;
+      console.log("WALL-E moved with success.");
+    } else console.log("Error while moving.");
+  });
 }
 
 var move_arm_service = new ROSLIB.Service({
-    ros: ros,
-    name: '/move_arm',
-    serviceType: 'wall_e_msg_srv/MoveArm'
+  ros: ros,
+  name: "/move_arm",
+  serviceType: "wall_e_msg_srv/MoveArm",
 });
 
 function move_arm(arm, angle) {
-    if(arm == 'left'){
-        angle = 180 - angle;
-    }
+  if (arm == "left") angle = 180 - angle;
 
-    var request = new ROSLIB.ServiceRequest({
-        arm_id: arm,
-        angle: angle
-    });
+  var request = new ROSLIB.ServiceRequest({
+    arm_id: arm,
+    angle: angle,
+  });
 
-    move_arm_service.callService(request, function(result) {
-        if (result.success) {
-            console.log('WALL-E moved an arm with success.');
-        } else {
-            console.log('Error while moving an arm.');
-        }
-    });
+  move_arm_service.callService(request, function (result) {
+    if (result.success) console.log("WALL-E moved an arm with success.");
+    else console.log("Error while moving an arm.");
+  });
 }
 
-function mouse_camera_drag_active_listener(event){
-    initial_x = event.clientX;
-    initial_y = event.clientY;
-    camera_dragged = true;
+function mouse_camera_drag_active_listener(event) {
+  initial_x = event.clientX;
+  initial_y = event.clientY;
+  camera_dragged = true;
 
-    event.preventDefault();
+  event.preventDefault();
 }
 
-function touch_camera_drag_active_listener(event){
-    initial_x = event.touches[0].clientX;
-    initial_y = event.touches[0].clientY;
-    camera_dragged = true;
-    
-    event.preventDefault();
+function touch_camera_drag_active_listener(event) {
+  initial_x = event.touches[0].clientX;
+  initial_y = event.touches[0].clientY;
+  camera_dragged = true;
+
+  event.preventDefault();
 }
 
-function set_camera_drag_active_class(){
-    cameraDisplay.classList.add('cameraDragActive');
+function set_camera_drag_active_class() {
+  cameraDisplay.classList.add("cameraDragActive");
 
-    const cameraDragActive = document.getElementsByClassName('cameraDragActive')[0];
+  const cameraDragActive =
+    document.getElementsByClassName("cameraDragActive")[0];
 
-    cameraDragActive.addEventListener('mousedown', mouse_camera_drag_active_listener);
-    cameraDragActive.addEventListener('touchstart', touch_camera_drag_active_listener);
-    cameraDragActive.setAttribute('title', 'DRAG TO MOVE WALL-E\'S HEAD');
+  cameraDragActive.addEventListener(
+    "mousedown",
+    mouse_camera_drag_active_listener
+  );
+  cameraDragActive.addEventListener(
+    "touchstart",
+    touch_camera_drag_active_listener
+  );
+  cameraDragActive.setAttribute("title", "DRAG TO MOVE WALL-E'S HEAD");
 }
 
-function remove_camera_drag_active_class(){
-    const cameraDragActive = document.getElementsByClassName('cameraDragActive')[0];
+function remove_camera_drag_active_class() {
+  const cameraDragActive =
+    document.getElementsByClassName("cameraDragActive")[0];
 
-    if(cameraDragActive != undefined){
-        cameraDragActive.removeEventListener('mousedown', mouse_camera_drag_active_listener);
-        cameraDragActive.removeEventListener('touchstart', touch_camera_drag_active_listener);
-        cameraDragActive.removeAttribute('title');
+  if (cameraDragActive != undefined) {
+    cameraDragActive.removeEventListener(
+      "mousedown",
+      mouse_camera_drag_active_listener
+    );
+    cameraDragActive.removeEventListener(
+      "touchstart",
+      touch_camera_drag_active_listener
+    );
+    cameraDragActive.removeAttribute("title");
 
-        cameraDisplay.classList.remove('cameraDragActive');
-    }
+    cameraDisplay.classList.remove("cameraDragActive");
+  }
 }
+
+/*
+ * Service functions
+ */
 
 var make_sound_service = new ROSLIB.Service({
-    ros: ros,
-    name: '/play_sound',
-    serviceType: 'wall_e_msg_srv/PlaySound'
+  ros: ros,
+  name: "/play_sound",
+  serviceType: "wall_e_msg_srv/PlaySound",
 });
 
 function play_sound(sound_number) {
-    var sound = document.getElementById('sound' + sound_number);
-    var progress_bar = document.getElementById('progressBar' + sound_number);
-    var sound_duration = sound.duration;
-    var transition_duration = sound_duration * 1000;
+  //   console.log("play_sound service function is called");
+  var sound = document.getElementById("sound" + sound_number);
+  var progress_bar = document.getElementById("progressBar" + sound_number);
+  var sound_duration = sound.duration;
+  var transition_duration = sound_duration * 1000;
 
-    progress_bar.style.transition = 'width ' + transition_duration + 'ms linear';
-    progress_bar.style.width = '100%';
+  progress_bar.style.transition = "width " + transition_duration + "ms linear";
+  progress_bar.style.width = "100%";
 
-    // sound.volume = 0.05;
-    sound.volume = 0.2;
-    sound.play();
+  sound.volume = 0.05;
+  sound.play();
 
-    sound.addEventListener('ended', function() {
-        progress_bar.style.transition = 'width 0ms linear';
-        progress_bar.style.width = '0%';
-    });
+  sound.addEventListener("ended", function () {
+    progress_bar.style.transition = "width 0ms linear";
+    progress_bar.style.width = "0%";
+  });
 
-    var request = new ROSLIB.ServiceRequest({
-        sound: sound_number,
-        duration: sound_duration
-    });
+  var request = new ROSLIB.ServiceRequest({
+    sound: sound_number,
+    duration: sound_duration,
+  });
 
-    make_sound_service.callService(request, function(result) {
-        if (result.success) {
-            console.log('WALL-E played the sound with success.');
-        } else {
-            console.log('Error while sound reading.');
-        }
-    });
+  make_sound_service.callService(request, function (result) {
+    if (result.success) console.log("WALL-E played the sound with success.");
+    else console.log("Error while sound reading.");
+  });
 }
 
-var sensors_subscriber = new ROSLIB.Topic({
-    ros: ros,
-    name: '/distances_topic',
-    messageType: 'std_msgs/msg/Int32MultiArray'
-});
-
-sensors_subscriber.subscribe(function(message) {
-    const left_sensor_value = document.getElementById('leftSensor');
-    const right_sensor_value = document.getElementById('rightSensor');
-    const front_sensor_value = document.getElementById('frontSensor');
-
-    left_distance = message.data[0]
-    right_distance = message.data[1]
-    front_distance = message.data[2]
-
-    if(left_distance === undefined)
-        left_sensor_value.textContent = 'Left sensor: no sensor found';
-    if(left_distance < 2 || left_distance > 400) 
-        left_sensor_value.textContent = 'Left sensor: no obstacle';
-    else 
-        left_sensor_value.textContent = 'Left sensor: ' + left_distance + 'cm';
-
-    if(right_distance === undefined)
-        right_sensor_value.textContent = 'Right sensor: no sensor found';
-    else if(right_distance < 2 || right_distance > 400) 
-        right_sensor_value.textContent = 'Right sensor: no obstacle';
-    else 
-        right_sensor_value.textContent = 'Right sensor: ' + right_distance + 'cm';
-
-    if(front_distance === undefined)
-        front_sensor_value.textContent = 'Front sensor: no sensor found';
-    else if(front_distance < 2 || front_distance > 400) 
-        front_sensor_value.textContent = 'Front sensor: no obstacle';
-    else 
-        front_sensor_value.textContent = 'Front sensor: ' + front_distance + 'cm';
-});
-
-var battery_charge_subscriber = new ROSLIB.Topic({
-    ros: ros,
-    name: '/battery_charge_topic',
-    messageType: 'std_msgs/msg/Int8'
-});
-
-battery_charge_subscriber.subscribe(function(message) {
-    const battery_progress = document.getElementById('batteryProgress');
-    const battery_text = document.getElementById('batteryPercent');
-
-    var battery_pct = message.data;
-    var battery_height = battery_pct * 18 / 100;
-
-    battery_progress.style.height = battery_height + 'px';
-    battery_text.textContent = battery_pct + '%';
-
-    //Battery color change
-    if(battery_pct < 20) battery_progress.style.background = 'red';
-    else battery_progress.style.background = 'green';
-});
-
-var image_topic = new ROSLIB.Topic({
-    ros: ros,
-    name: "/camera_frame_topic",
-    messageType: "sensor_msgs/Image"
-});
-
-image_topic.subscribe(function(message) {
-    var img = document.getElementById("cameraDisplay");
-    img.src = "data:image/jpeg;base64," + message.data;
-});
-
-
 var switch_ai_service = new ROSLIB.Service({
-    ros: ros,
-    name: '/switch_ai',
-    serviceType: 'wall_e_msg_srv/SwitchAI'
+  ros: ros,
+  name: "/switch_ai",
+  serviceType: "wall_e_msg_srv/SwitchAI",
 });
 
-function switch_ai()
-{
-    const ai_button = document.getElementById('AIButton');
-    const camera_display = document.getElementById('cameraDisplay');
+function switch_ai() {
+  // console.log("switch_ai service function is called")
+  const ai_button = document.getElementById("AIButton");
+  const camera_display = document.getElementById("cameraDisplay");
 
-    if(ai_on == false)
-    {
-        ai_on = true;
-        ai_button.style.backgroundImage = 'url(\'../images/AIOn2.png\')';
-    }
+  if (ai_on == false)
+    ai_button.style.backgroundImage = "url('../images/AIOn2.png')";
+  else ai_button.style.backgroundImage = "url('../images/AIOff2.png')";
 
-    else
-    {
-        ai_on = false;
-        ai_button.style.backgroundImage = 'url(\'../images/AIOff2.png\')';
-    }
+  ai_on = !ai_on;
 
-    var request = new ROSLIB.ServiceRequest({
-        ai_on: ai_on,
-    });
+  var request = new ROSLIB.ServiceRequest({
+    ai_on: ai_on,
+  });
 
-    switch_ai_service.callService(request, function(result) {
-        if (result.success) {
-            console.log('WALL-E switched AI on/off with success.');
-        } else {
-            console.log('Error while switching AI on/off.');
-        }
-    });
+  switch_ai_service.callService(request, function (result) {
+    if (result.success) console.log("WALL-E switched AI on/off with success.");
+    else console.log("Error while switching AI on/off.");
+  });
 }
 
 var set_intensity_service = new ROSLIB.Service({
-    ros: ros,
-    name: '/set_intensity',
-    serviceType: 'wall_e_msg_srv/SetIntensity'
+  ros: ros,
+  name: "/set_intensity",
+  serviceType: "wall_e_msg_srv/SetIntensity",
 });
 
 function switch_light() {
-    const lightButton = document.getElementById('lightButton');
+  // console.log("switch_light service function is called")
+  const lightButton = document.getElementById("lightButton");
+  var intensity_pct = null;
 
-    if(light_on == false)
-    {
-        intensity_pct = 100;
-        lightButton.style.backgroundImage = 'url(\'images/bulbOn2.png\')';
-    }
-    
-    else
-    {
-        intencity_pct = 0;
-        lightButton.style.backgroundImage = 'url(\'images/bulbOff2.png\')';
-    }
+  if (light_on == false) {
+    intensity_pct = 100;
+    lightButton.style.backgroundImage = "url('images/bulbOn2.png')";
+  } else {
+    intensity_pct = 0;
+    lightButton.style.backgroundImage = "url('images/bulbOff2.png')";
+  }
 
-    light_on = !light_on;
+  light_on = !light_on;
 
-    var request = new ROSLIB.ServiceRequest({
-        light_id: "camera_light",
-        intensity_pct: intencity_pct,
-    });
+  var request = new ROSLIB.ServiceRequest({
+    light_id: "camera_light",
+    intensity_pct: intensity_pct,
+  });
 
-    set_intensity_service.callService(request, function(result) {
-        if (result.success) {
-            console.log('WALL-E switched camera light on/off with success.');
-        } else {
-            console.log('Error while switching camera light on/off.');
-        }
-    });
+  set_intensity_service.callService(request, function (result) {
+    if (result.success)
+      console.log("WALL-E switched camera light on/off with success.");
+    else console.log("Error while switching camera light on/off.");
+  });
 }
+
+/*
+ * Callback functions
+ */
+
+var sensors_subscriber = new ROSLIB.Topic({
+  ros: ros,
+  name: "/distances_topic",
+  messageType: "std_msgs/msg/Float32MultiArray",
+});
+
+sensors_subscriber.subscribe(function (message) {
+  // console.log("sensors_subscriber callback function is called")
+  const left_sensor_value = document.getElementById("leftSensor");
+  const right_sensor_value = document.getElementById("rightSensor");
+  const front_sensor_value = document.getElementById("frontSensor");
+
+  left_distance = message.data[0];
+  right_distance = message.data[1];
+  front_distance = message.data[2];
+
+  if (left_distance === undefined)
+    left_sensor_value.textContent = "Left sensor: no sensor found";
+  if (left_distance < 2 || left_distance > 400)
+    left_sensor_value.textContent = "Left sensor: no obstacle";
+  else
+    left_sensor_value.textContent =
+      "Left sensor: " + left_distance.toFixed(2) + "cm";
+
+  if (right_distance === undefined)
+    right_sensor_value.textContent = "Right sensor: no sensor found";
+  else if (right_distance < 2 || right_distance > 400)
+    right_sensor_value.textContent = "Right sensor: no obstacle";
+  else
+    right_sensor_value.textContent =
+      "Right sensor: " + right_distance.toFixed(2) + "cm";
+
+  if (front_distance === undefined)
+    front_sensor_value.textContent = "Front sensor: no sensor found";
+  else if (front_distance < 2 || front_distance > 400)
+    front_sensor_value.textContent = "Front sensor: no obstacle";
+  else
+    front_sensor_value.textContent =
+      "Front sensor: " + front_distance.toFixed(2) + "cm";
+});
+
+var battery_charge_subscriber = new ROSLIB.Topic({
+  ros: ros,
+  name: "/battery_charge_topic",
+  messageType: "std_msgs/msg/Int8",
+});
+
+battery_charge_subscriber.subscribe(function (message) {
+  // console.log("battery_charge_subscriber callback function is called")
+  const battery_progress = document.getElementById("batteryProgress");
+  const battery_text = document.getElementById("batteryPercent");
+
+  var battery_pct = message.data;
+  var battery_height = (battery_pct * 18) / 100;
+
+  battery_progress.style.height = battery_height + "px";
+  battery_text.textContent = battery_pct + "%";
+
+  if (battery_pct < 20) battery_progress.style.background = "red";
+  else battery_progress.style.background = "green";
+});
+
+var image_topic = new ROSLIB.Topic({
+  ros: ros,
+  name: "/camera_frame_topic",
+  messageType: "sensor_msgs/Image",
+});
+
+image_topic.subscribe(function (message) {
+  console.log("image_topic callback function is called");
+  var img = document.getElementById("cameraDisplay");
+  img.src = "data:image/jpeg;base64," + message.data;
+});

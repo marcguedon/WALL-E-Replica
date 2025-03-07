@@ -1,11 +1,17 @@
-import Adafruit_GPIO.SPI as SPI
-import ST7789 as TFT
+import board
 import math
 import os
 import rclpy
+import displayio
+import terminalio
+import adafruit_display_shapes.circle as circle
+import adafruit_display_shapes.rect as rect
+from adafruit_display_text import label
+from adafruit_bitmap_font import bitmap_font
+from fourwire import FourWire
+from adafruit_st7789 import ST7789
 from rclpy.node import Node
 from std_msgs.msg import Int8
-from PIL import Image, ImageDraw, ImageFont
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 FONT_PATH = os.path.join(ROOT_PATH, "web_server/fonts/arial.ttf")
@@ -13,178 +19,126 @@ FONT_PATH = os.path.join(ROOT_PATH, "web_server/fonts/arial.ttf")
 RST_PIN = 25
 DC_PIN = 24
 BLK_PIN = 27
-SPI_PORT = 0
-SPI_DEVICE = 0
-SPI_MODE = 0b11
-SPI_SPEED_HZ = 40000000
+SPI_BAUDRATE = 40000000
 
 SCREEN_WIDTH = 240
 SCREEN_HEIGHT = 240
 
+YELLOW = (255, 255, 0)
+BLACK = (0, 0, 0)
+
 
 class Screen:
-    def __init__(
-        self,
-        spi_port: int,
-        spi_device: int,
-        spi_speed_hz: int,
-        spi_mode: int,
-        rst_pin: int,
-        dc_pin: int,
-        blk_pin: int,
-    ):
-        self.disp = TFT.ST7789(
-            spi=SPI.SpiDev(spi_port, spi_device, max_speed_hz=spi_speed_hz),
-            mode=spi_mode,
-            rst=rst_pin,
-            dc=dc_pin,
-            led=blk_pin,
-        )
-        self.image = Image.new("RGB", (SCREEN_WIDTH, SCREEN_HEIGHT), color=(0, 0, 0))
-        self.draw = ImageDraw.Draw(self.image)
+    def __init__(self):
+        spi = board.SPI()
 
-        self.disp.begin()
+        if not spi.try_lock():
+            raise RuntimeError("Failed to acquire SPI lock")
+
+        spi.configure(baudrate=SPI_BAUDRATE)
+
+        display_bus = FourWire(
+            spi, command=board.D24, chip_select=board.D27, reset=board.D25
+        )
+
+        self.display = ST7789(
+            display_bus, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, rowstart=80
+        )
+
+        self.splash = displayio.Group()
+        self.display.root_group = self.splash
 
         # Clear screen
-        self.clear()
+        # self.clear()
         self.init()
 
-    def init(self):
+    def draw_text(self):
         text = "SOLAR CHARGE LEVEL"
-        font = ImageFont.truetype(FONT_PATH, 18)
-        text_bbox = self.draw.textbbox((0, 0), text, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
+        # font = bitmap_font.load_font(FONT_PATH)
+        text_area = label.Label(terminalio.FONT, text=text, color=0xFFFF00)
+        text_width = text_area.bounding_box[2]
         text_x = (SCREEN_WIDTH - text_width) // 2
         text_y = 15
-        self.draw.text((text_x, text_y), text, font=font, fill=(255, 255, 0))
+        text_group = displayio.Group(scale=2, x=text_x, y=text_y)
+        text_group.append(text_area)
+        self.splash.append(text_group)
 
-        # Draw yellow sun
-        self.draw.ellipse((34, 65, 64, 95), fill=(255, 255, 0))
-        self.draw.ellipse((40, 71, 58, 89), fill=(0, 0, 0))
-        self.draw.rectangle((47, 51, 51, 61), fill=(255, 255, 0))
-        self.draw.rectangle((47, 99, 51, 109), fill=(255, 255, 0))
-        self.draw.rectangle((20, 78, 30, 82), fill=(255, 255, 0))
-        self.draw.rectangle((68, 78, 78, 82), fill=(255, 255, 0))
+    def draw_sun(self):
+        sun_group = displayio.Group()
+        sun_group.append(circle.Circle(34, 65, 15, fill=0xFFFF00))
+        sun_group.append(circle.Circle(40, 71, 9, fill=0x000000))
+        sun_group.append(rect.Rect(47, 51, width=4, height=10, fill=0xFFFF00))
+        sun_group.append(rect.Rect(47, 99, width=4, height=10, fill=0xFFFF00))
+        sun_group.append(rect.Rect(20, 78, width=10, height=4, fill=0xFFFF00))
+        sun_group.append(rect.Rect(68, 78, width=10, height=4, fill=0xFFFF00))
 
-        self.__createRotatedRectangle(24, 66, 30)
-        self.__createRotatedRectangle(33, 57, 60)
-        self.__createRotatedRectangle(56, 57, 120)
-        self.__createRotatedRectangle(65, 66, 150)
-        self.__createRotatedRectangle(65, 91, 210)
-        self.__createRotatedRectangle(56, 100, 240)
-        self.__createRotatedRectangle(33, 100, 300)
-        self.__createRotatedRectangle(24, 91, 330)
+        self.splash.append(sun_group)
 
-        # Draw yellow battery charge
-        self.draw.rectangle((100, 61, 220, 69), fill=(255, 255, 0))
-        self.draw.rectangle((100, 77, 220, 85), fill=(255, 255, 0))
-        self.draw.rectangle((100, 93, 220, 101), fill=(255, 255, 0))
-        self.draw.rectangle((100, 109, 220, 117), fill=(255, 255, 0))
-        self.draw.rectangle((100, 125, 220, 133), fill=(255, 255, 0))
-        self.draw.rectangle((100, 141, 220, 149), fill=(255, 255, 0))
-        self.draw.rectangle((100, 157, 220, 165), fill=(255, 255, 0))
-        self.draw.rectangle((100, 173, 220, 181), fill=(255, 255, 0))
-        self.draw.rectangle((100, 189, 220, 197), fill=(255, 255, 0))
-        self.draw.rectangle((100, 205, 220, 230), fill=(255, 255, 0))
+        positions_angles = [
+            (24, 66, 30),
+            (33, 57, 60),
+            (56, 57, 120),
+            (65, 66, 150),
+            (65, 91, 210),
+            (56, 100, 240),
+            (33, 100, 300),
+            (24, 91, 330),
+        ]
 
-        self.update(0)
+        for x, y, angle_deg in positions_angles:
+            self.create_rotated_rectangle(x, y, 10, 4, math.radians(angle_deg))
 
-        print("Initialized screen")
+    def draw_battery_charge(self):
+        battery_group = displayio.Group()
+        battery_group.append(rect.Rect(100, 61, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 77, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 93, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 109, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 125, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 141, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 157, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 173, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 189, width=120, height=8, fill=0xFFFF00))
+        battery_group.append(rect.Rect(100, 205, width=120, height=25, fill=0xFFFF00))
 
-    def clear(self):
-        self.disp.clear()
-        self.disp.display()
+        self.splash.append(battery_group)
 
-    def update(self, battery_pct: int):
-        # Draw yellow battery charge
-        self.draw.rectangle((100, 61, 220, 69), fill=(255, 255, 0))
-        self.draw.rectangle((100, 77, 220, 85), fill=(255, 255, 0))
-        self.draw.rectangle((100, 93, 220, 101), fill=(255, 255, 0))
-        self.draw.rectangle((100, 109, 220, 117), fill=(255, 255, 0))
-        self.draw.rectangle((100, 125, 220, 133), fill=(255, 255, 0))
-        self.draw.rectangle((100, 141, 220, 149), fill=(255, 255, 0))
-        self.draw.rectangle((100, 157, 220, 165), fill=(255, 255, 0))
-        self.draw.rectangle((100, 173, 220, 181), fill=(255, 255, 0))
-        self.draw.rectangle((100, 189, 220, 197), fill=(255, 255, 0))
-        self.draw.rectangle((100, 205, 220, 230), fill=(255, 255, 0))
+    def init(self):
+        self.draw_text()
+        self.draw_sun()
+        self.draw_battery_charge()
 
-        # Show battery charges
+        self.update_battery_charge(0)
+
+        # print("Initialized screen")
+
+    # def clear(self):
+    #     self.display.clear()
+
+    def update_battery_charge(self, battery_pct: int):
+        self.draw_battery_charge()
+
         if battery_pct < 20:
-            self.draw.rectangle((100, 59, 220, 197), fill=(0, 0, 0))
+            hidding_rect = rect.Rect(100, 59, width=120, height=138, fill=0x000000)
 
         else:
-            height = ((battery_pct // 10 * 10) - 100) * (140 - 0) / (10 - 100) + 0
-            self.draw.rectangle((100, 59, 220, 59 + height), fill=(0, 0, 0))
+            height = int(((battery_pct // 10 * 10) - 100) * (140 - 0) / (10 - 100) + 0)
+            hidding_rect = rect.Rect(100, 59, width=120, height=height, fill=0x000000)
 
-        self.disp.display(self.image)
+        self.splash.append(hidding_rect)
 
-    # Rotated rectangle creation (used to draw yellow sun)
-    def __createRotatedRectangle(self, x: int, y: int, angle_deg: int):
-        width = 10
-        height = 4
+    def create_rotated_rectangle(self, x, y, width, height, angle):
+        rectangle = rect.Rect(x, y, width, height, fill=0xFFFF00)
+        rectangle.rotation = angle
 
-        angle_rad = angle_deg * 3.14159 / 180.0
-        center_x = x + width / 2
-        center_y = y + height / 2
-
-        # Calculation of rotated rectangle angles position
-        x1 = (
-            center_x
-            + (x - center_x) * math.cos(angle_rad)
-            - (y - center_y) * math.sin(angle_rad)
-        )
-        y1 = (
-            center_y
-            + (x - center_x) * math.sin(angle_rad)
-            + (y - center_y) * math.cos(angle_rad)
-        )
-        x2 = (
-            center_x
-            + ((x + width) - center_x) * math.cos(angle_rad)
-            - (y - center_y) * math.sin(angle_rad)
-        )
-        y2 = (
-            center_y
-            + ((x + width) - center_x) * math.sin(angle_rad)
-            + (y - center_y) * math.cos(angle_rad)
-        )
-        x3 = (
-            center_x
-            + ((x + width) - center_x) * math.cos(angle_rad)
-            - ((y + height) - center_y) * math.sin(angle_rad)
-        )
-        y3 = (
-            center_y
-            + ((x + width) - center_x) * math.sin(angle_rad)
-            + ((y + height) - center_y) * math.cos(angle_rad)
-        )
-        x4 = (
-            center_x
-            + (x - center_x) * math.cos(angle_rad)
-            - ((y + height) - center_y) * math.sin(angle_rad)
-        )
-        y4 = (
-            center_y
-            + (x - center_x) * math.sin(angle_rad)
-            + ((y + height) - center_y) * math.cos(angle_rad)
-        )
-
-        self.draw.polygon([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], fill=(255, 255, 0))
+        self.splash.append(rectangle)
 
 
 class ScreenNode(Node):
     def __init__(self):
         super().__init__("screen_node")
 
-        self.screen = Screen(
-            spi_port=SPI_PORT,
-            spi_device=SPI_DEVICE,
-            spi_speed=SPI_SPEED_HZ,
-            spi_mode=SPI_MODE,
-            rst_pin=RST_PIN,
-            dc_pin=DC_PIN,
-            blk_pin=BLK_PIN,
-        )
+        self.screen = Screen()
 
         self.battery_charge_subscription = self.create_subscription(
             Int8, "battery_charge_topic", self.battery_charge_callback, 10
@@ -193,7 +147,7 @@ class ScreenNode(Node):
     def battery_charge_callback(self, msg):
         battery_pct = msg.data
 
-        self.screen.update(battery_pct)
+        self.screen.update_battery_charge(battery_pct)
 
 
 def main(args=None):

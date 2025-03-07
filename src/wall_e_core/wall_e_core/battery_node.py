@@ -1,7 +1,10 @@
-import ADS1x15
+import adafruit_ads1x15.ads1115 as ADS
 import rclpy
+import board
+import busio
 from rclpy.node import Node
 from std_msgs.msg import Int8
+from adafruit_ads1x15.analog_in import AnalogIn
 
 DEFAULT_IN_MIN = 14460  # 9V -> 14460
 DEFAULT_IN_MAX = 20195  # 12.6V -> 20195
@@ -22,13 +25,14 @@ class Battery:
 
         Args:
             driverAdr (int): Adress of the ADC module
-            in_min (int, optional): _description_. Defaults to DEFAULT_IN_MIN. # TODO
-            in_max (int, optional): _description_. Defaults to DEFAULT_IN_MAX. # TODO
-            out_min (int, optional): _description_. Defaults to DEFAULT_OUT_MIN. # TODO
-            out_max (int, optional): _description_. Defaults to DEFAULT_OUT_MAX. # TODO
+            in_min (int, optional): _description_. Defaults to DEFAULT_IN_MIN.
+            in_max (int, optional): _description_. Defaults to DEFAULT_IN_MAX.
+            out_min (int, optional): _description_. Defaults to DEFAULT_OUT_MIN.
+            out_max (int, optional): _description_. Defaults to DEFAULT_OUT_MAX.
         """
-        self.driver = ADS1x15.ADS1115(1, driverAdr)
-        self.driver.setGain(self.driver.PGA_4_096V)
+        i2c = busio.I2C(board.SCL, board.SDA)
+        self.adc = ADS.ADS1115(i2c, address=driverAdr)
+        self.channel = AnalogIn(self.adc, ADS.P0)
         self.in_min = in_min
         self.in_max = in_max
         self.out_min = out_min
@@ -40,9 +44,11 @@ class Battery:
         Returns:
             int: Battery percentage
         """
+        adc_value = self.channel.value
+        
         return (
             int(
-                (self.driver.readADC(0) - self.in_min)
+                (adc_value - self.in_min)
                 * (self.out_max - self.out_min)
                 / (self.in_max - self.in_min)
             )
@@ -51,6 +57,7 @@ class Battery:
 
 
 DEFAULT_RATE = 1
+DEFAULT_ADR = 0x48
 
 
 class BatteryNode(Node):
@@ -65,7 +72,7 @@ class BatteryNode(Node):
         """
         super().__init__("battery_node")
 
-        self.battery = Battery(0x48)
+        self.battery = Battery(DEFAULT_ADR)
         self.rate = rate
 
         self.battery_charge_publisher = self.create_publisher(
@@ -78,7 +85,6 @@ class BatteryNode(Node):
         msg = Int8()
         msg.data = self.battery.get_charge_percentage()
         self.battery_charge_publisher.publish(msg)
-        # self.get_logger().info(f"Message published : {msg.data}")
 
 
 def main(args=None):
