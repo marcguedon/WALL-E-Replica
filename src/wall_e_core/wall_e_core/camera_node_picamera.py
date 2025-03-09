@@ -1,21 +1,14 @@
 import cv2
 import mediapipe as mp
 import rclpy
-import ffmpeg
-import os
-import numpy as np
+import picamera2
 from rclpy.node import Node
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from wall_e_msg_srv.srv import SwitchAI
 
 DEFAULT_CAMERA_INDEX = 0
-# TEST FFMEG
-# IMAGE_PATH = "/tmp/video_stream.h264"
-############
-# TEST JPG
-# IMAGE_PATH = "/tmp/video_stream.jpg"
-##########
+
 
 
 class Camera:
@@ -30,51 +23,11 @@ class Camera:
         self.display_ai_overlay = False
         self.mp_hands = mp.solutions.hands.Hands()
 
-        # TEST FFMEG
-        # self.process = (
-        #     ffmpeg.input("/tmp/video_stream.h264")
-        #     .output("pipe:1", format="rawvideo", pix_fmt="bgr24")
-        #     .run_async(pipe_stdout=True, pipe_stderr=True)
-        # )
-        ############
-        
-        # TEST LIBCAMERA
-        self.process = subprocess.Popen(
-            ["libcamera-vid", "--width", "640", "--height", "480", "--framerate", "30", "--codec", "raw", "-o", "-"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            bufsize=640 * 480 * 3,
-        )
-        ################
+        self.picam2 = picamera2.Picamera2()
+        self.picam2.start()
 
     def get_camera_capture(self):
-        # TEST FFMEG
-        # in_bytes = self.process.stdout.read(640 * 480 * 3)
-
-        # if len(in_bytes) < 640 * 480 * 3:
-        #     return
-
-        # data = np.frombuffer(in_bytes, np.uint8).reshape([480, 640, 3])
-        ############
-        
-        # TEST JPG
-        # if not os.path.exists(IMAGE_PATH):
-        #     return None
-        
-        # image = cv2.imread(IMAGE_PATH)
-        # if image is None:
-        #     return None
-
-        # image = cv2.resize(image, (640, 480))
-        ##########
-
-        # TEST LIBCAMERA
-        raw_frame = self.process.stdout.read(640 * 480 * 3)
-        if len(raw_frame) < 640 * 480 * 3:
-            return None
-
-        data = np.frombuffer(raw_frame, dtype=np.uint8).reshape((480, 640, 3))
-        ################
+        image = picam2.capture_array()
 
         if self.display_ai_overlay:
             image = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
@@ -130,9 +83,7 @@ class Camera:
     def release_camera(self):
         """Releases the camera"""
         self.mp_hands.close()
-        
-        self.process.terminate()
-        self.process.wait()
+        self.camera.stop()
 
 
 DEFAULT_FRAMERATE = 30

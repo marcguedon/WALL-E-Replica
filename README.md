@@ -117,6 +117,7 @@ https://docs.docker.com/engine/install/debian/#install-using-the-repository
 sudo apt install -y ros-humble-rosbridge-server ros-humble-vision-opencv ros-humble-rosidl-generator-py python3-rosdep2
 
 **Build le package**
+colcon build --packages-select wall_e_msg_srv
 colcon build --packages-select wall_e_core
 source install/setup.bash
 
@@ -125,4 +126,89 @@ source ~/.bashrc
 
 ros2 launch wall_e_core wall_e_launch.py
 
-# TODO Tester cette librairie:  pip install adafruit-circuitpython-ads1x15
+
+docker run -it --privileged --name WALL_E -v /tmp:/tmp -v $PWD:/wall_e --device /dev/gpiomem -v /sys:/sys --device /dev/video0 --device /dev/mem --device /dev/gpiomem --device /dev/i2c-1 --device /dev/spidev0.0 --device /dev/vchiq -p 80:80 -p 5000:5000 -p 9090:9090 wallereplica:latest bash
+
+docker run -it --privileged --name WALL_E -v /tmp:/tmp -v $PWD:/wall_e --device /dev/gpiomem -v /sys:/sys --device /dev/video0 --device /dev/mem --device /dev/gpiomem --device /dev/i2c-1 --device /dev/spidev0.0 --device /dev/vchiq --env LIBGL_ALWAYS_SOFTWARE=1 -p 80:80 -p 5000:5000 -p 9090:9090 wallereplica:latest bash
+
+sudo raspi-config nonint do_i2c 0
+sudo raspi-config nonint do_spi 0
+
+
+
+Sur le Raspberry, lancer la commande suivante:
+```console
+libcamera-vid -t 0 -o /tmp/video_stream.h264
+libcamera-still -t 0 -o /tmp/video_stream.jpg
+```
+
+Dans le docker, installer la lib suivante:
+```console
+apt-get install -y ffmpeg
+python3 -m pip install ffmpeg-python
+```
+
+```py
+import cv2
+import ffmpeg
+import numpy as np
+from flask import Flask, render_template, Response
+
+app = Flask(__name__)
+
+
+def generate_frames():
+    process = (
+        ffmpeg.input("/tmp/video_stream.jpg")
+        .output("pipe:1", format="rawvideo", pix_fmt="bgr24")
+        .run_async(pipe_stdout=True, pipe_stderr=True)
+    )
+
+    while True:
+        in_bytes = process.stdout.read(640 * 480 * 3)
+
+        if len(in_bytes) < 640 * 480 * 3:
+            break
+
+        frame = np.frombuffer(in_bytes, np.uint8).reshape([480, 640, 3])
+        ret, buffer = cv2.imencode(".jpg", frame)
+
+        # in_bytes shape: 921600, frame shape: (480, 640, 3), buffer shape: (47269,) but buffer shape always change
+        print(
+            f"in_bytes shape: {len(in_bytes)}, frame shape: {frame.shape}, buffer shape: {buffer.shape}"
+        )
+
+        if not ret:
+            print("Failed to encode frame")
+            continue
+
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+        )
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/video_feed")
+def video_feed():
+    return Response(
+        generate_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+```
+
+
+docker run -it --privileged --name WALL_E -v /tmp:/tmp --device /dev/gpiomem -v /sys:/sys --device /dev/video0 --device /dev/mem --device /dev/gpiomem --device /dev/i2c-1 --device /dev/spidev0.0 --device /dev/vchiq --env LIBGL_ALWAYS_SOFTWARE=1 -p 80:80 -p 5000:5000 -p 9090:9090 wallereplica:latest bash
+
+
+
+docker run -it --privileged --name WALL_E -v /usr/bin/libcamera-still:/usr/bin/libcamera-still -v /run/libcamera:/run/libcamera -v /usr/bin/libcamera-vid:/usr/bin/libcamera-vid -v /lib:/lib -v /usr/lib:/usr/lib -v /tmp:/tmp -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys --env LIBGL_ALWAYS_SOFTWARE=1 -p 80:80 -p 5000:5000 -p 9090:9090 wallereplica:latest bash
+
+docker run -it --privileged --name WALL_E -v /usr:/usr -v /tmp:/tmp -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys --env LIBGL_ALWAYS_SOFTWARE=1 -p 80:80 -p 5000:5000 -p 9090:9090 wallereplica:latest bash
