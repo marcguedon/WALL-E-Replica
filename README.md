@@ -6,9 +6,12 @@ Here is the [link to my project webpage](http://thedraill.e-monsite.com/pages/pr
 
 ### Installation of the OS
 
-First, you have to install an OS on the Raspberry. To operate the ```mediapipe``` library (which we will see later), it is essential to have a 64-bit OS. In addition, to prevent the Raspberry from using its resources unnecessarily, you must install an OS without a desktop. That's why you need to install **Raspberry Pi OS Lite (64-bit)**. You can enable SSH if you want to work on the Raspberry remotely. To do this, just use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) and install the OS on a micro SD card.
+First, you have to install an OS on the Raspberry. For the proper functioning of the AI ​​used (which we will see later), it is essential to have a 64-bit OS. In addition, to prevent the Raspberry from using its resources unnecessarily, you must install an OS without a desktop. That's why you need to install **Ubuntu server 22.04.X LTS (64bits)**. To do this, just use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) and install the OS on a micro SD card. You can enable SSH if you want to work on the Raspberry remotely, by adding a `ssh` file inside the boot directory of the SD card.
 
-The first thing to do after installing the OS is to update it:
+The first thing to do after installing the OS is to update it.
+```console
+sudo apt-get update
+```
 
 ### Installation of the libraries
 
@@ -212,3 +215,42 @@ docker run -it --privileged --name WALL_E -v /tmp:/tmp --device /dev/gpiomem -v 
 docker run -it --privileged --name WALL_E -v /usr/bin/libcamera-still:/usr/bin/libcamera-still -v /run/libcamera:/run/libcamera -v /usr/bin/libcamera-vid:/usr/bin/libcamera-vid -v /lib:/lib -v /usr/lib:/usr/lib -v /tmp:/tmp -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys --env LIBGL_ALWAYS_SOFTWARE=1 -p 80:80 -p 5000:5000 -p 9090:9090 wallereplica:latest bash
 
 docker run -it --privileged --name WALL_E -v /usr:/usr -v /tmp:/tmp -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys --env LIBGL_ALWAYS_SOFTWARE=1 -p 80:80 -p 5000:5000 -p 9090:9090 wallereplica:latest bash
+
+
+
+
+
+# Sur le raspberry
+
+Installation de Ubuntu server 22.04.X LTS (64bits)
+Installation de [ROS2 Humle](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html) en choisissant `ros-humble-ros-base`
+
+```console
+sudo apt-get install -y libraspberrypi-bin v4l-utils ros-humble-v4l2-camera raspi-config
+
+sudo raspi-config nonint do_i2c 0
+sudo raspi-config nonint do_spi 0
+sudo raspi-config nonint do_camera 0
+
+echo "start_x=1
+gpu_mem=128
+camera_auto_detect=0
+dtoverlay=imx708
+dtoverlay=vc4-kms-v3d" >> /boot/firmware/config.txt
+
+sudo apt-get install -y ros-humble-rosbridge-server ros-humble-vision-opencv
+sudo apt-get install -y python3-colcon-common-extensions python3-numpy python3-opencv python3-pygame python3-pip python3-rpi.gpio
+python3 -m pip install mediapipe adafruit-circuitpython-display-text adafruit-circuitpython-display-shapes adafruit-circuitpython-pca9685 adafruit-circuitpython-ads1x15 adafruit-circuitpython-st7789
+
+echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+
+colcon build --packages-select wall_e_msg_srv
+colcon build --packages-select wall_e_core
+
+echo "source /home/$USER/WALL-E-Replica/install/setup.bash" >> ~/.bashrc
+
+ros2 launch wall_e_core wall_e_launch.py
+```
+
+amixer cset numid=3 1
+sudo apt install pulseaudio pulseaudio-utils

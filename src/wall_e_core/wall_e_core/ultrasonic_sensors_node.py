@@ -4,24 +4,22 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
 
-GPIO.setwarnings(False)
-
-BCM_LEFT_TRIG_PIN = 17
-BCM_LEFT_ECHO_PIN = 18
-
-BCM_RIGHT_TRIG_PIN = 22
-BCM_RIGHT_ECHO_PIN = 23
-
 
 class UltrasonicSensor:
-    def __init__(self, bcm_trig_pin: int, bcm_echo_pin: int):
+    def __init__(self, bcm_trig_pin: int, bcm_echo_pin: int, logger=None):
+        self.logger = logger
+
         self.bcm_trig_pin = bcm_trig_pin
         self.bcm_echo_pin = bcm_echo_pin
 
+        GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.bcm_echo_pin, GPIO.IN)
         GPIO.setup(self.bcm_trig_pin, GPIO.OUT)
         GPIO.output(self.bcm_trig_pin, False)
+
+        if self.logger:
+            self.logger.debug("Ultrasonic sensor initialized")
 
     def get_distance(self):
         startTime = 0
@@ -41,13 +39,22 @@ class UltrasonicSensor:
 
         distance_cm = round((stopTime - startTime) * 34300 / 2, 2)
 
+        if self.logger:
+            self.logger.debug(f"Distance: {distance_cm}")
+
         return distance_cm
 
 
 DEFAULT_RATE = 20
 
+BCM_LEFT_TRIG_PIN = 17
+BCM_LEFT_ECHO_PIN = 18
 
-class UltrasonicSensorsPublisher(Node):
+BCM_RIGHT_TRIG_PIN = 22
+BCM_RIGHT_ECHO_PIN = 23
+
+
+class UltrasonicSensorsNode(Node):
     def __init__(self, rate: float = DEFAULT_RATE):
         """Constructor function
 
@@ -69,16 +76,28 @@ class UltrasonicSensorsPublisher(Node):
     def publish_distances(self):
         msg = Float32MultiArray()
         msg.data = [sensor.get_distance() for sensor in self.sensors]
+
         self.publisher.publish(msg)
-        # self.get_logger().info(f"Message published : {msg.data}")
+        self.get_logger().debug(f"publish_distances published\nmsg.data: {msg.data}")
+
+    def cleanup(self):
+        super().destroy_node()
+        self.destroy_node()
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = UltrasonicSensorsPublisher()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    node = UltrasonicSensorsNode()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutdown requested, stopping node...")
+    except:
+        pass
+    finally:
+        node.cleanup()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

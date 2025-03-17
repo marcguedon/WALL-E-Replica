@@ -1,0 +1,12 @@
+[Unit]
+Description=WALL-E Robot
+After=network.target
+
+[Service]
+ExecStart=ros2 launch wall_e_core wall_e_launch.py
+WorkingDirectory=/home/$USER/WALL-E-Replica/
+Restart=always
+User=$USER
+
+[Install]
+WantedBy=multi-user.target

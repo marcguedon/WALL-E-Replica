@@ -1,41 +1,83 @@
 import rclpy
+import os
 from rclpy.node import Node
 from pygame import mixer
 from wall_e_msg_srv.srv import PlaySound
+from wall_e_msg_srv.srv import SetVolume
+
+PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
+WORKSPACE_DIR = os.path.abspath(os.path.join(PACKAGE_DIR, "../../../../../.."))
+WEB_DIR = os.path.join(WORKSPACE_DIR, "web_server")
+DEFAULT_SOUNDS_PATH = os.path.join(WEB_DIR, "sounds")
 
 
 class SoundBoxNode(Node):
-    def __init__(self):
+    def __init__(self, files_path=DEFAULT_SOUNDS_PATH):
         super().__init__("soundbox_node")
+
+        self.path = files_path
+        if not os.path.exists(self.path):
+            raise FileNotFoundError(f"Sounds folder not found: {self.path}")
 
         mixer.init()
         mixer.music.set_volume(0.2)
 
-        self.serv = self.create_service(
+        self.play_sound_srv = self.create_service(
             PlaySound, "play_sound", self.play_sound_callback
+        )
+        self.set_volume_srv = self.create_service(
+            SetVolume, "set_volume", self.set_volume_callback
         )
 
     def play_sound(self, soundPath: str):
         mixer.music.load(soundPath)
         mixer.music.play()
 
-    def set_volume(self, volume: float):
-        mixer.music.set_volume(volume)
+    def set_volume(self, volume: int):
+        mixer.music.set_volume(volume / 100)
 
     def play_sound_callback(self, request, response):
-        sound_path = request.sound_file
+        sound_id = request.sound_id
+        duration = request.duration
+
+        self.get_logger().debug(
+            f"play_sound_callback service called\nsound_id: {sound_id}, duration: {duration}"
+        )
+
+        sound_path = os.path.join(self.path, "sound" + str(sound_id) + ".mp3")
         self.play_sound(sound_path)
         response.success = True
 
         return response
 
+    def set_volume_callback(self, request, response):
+        volume = request.volume
+
+        self.get_logger().debug(f"set_volume_callback service called\nvolume: {volume}")
+
+        self.set_volume(volume)
+        response.success = True
+
+        return response
+
+    def cleanup(self):
+        super().destroy_node()
+        self.destroy_node()
+
 
 def main(args=None):
     rclpy.init(args=args)
-    node = SoundBoxNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    node = SoundBoxNode(DEFAULT_SOUNDS_PATH)
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutdown requested, stopping node...")
+    except:
+        pass
+    finally:
+        node.cleanup()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

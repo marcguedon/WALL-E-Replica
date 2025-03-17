@@ -14,12 +14,13 @@ class Servomotor:
         self.logger = logger
 
     def set_angle(self, angle_deg: int):
-        pulse = int((int(angle_deg) - 0) * (2000 - 1000) / (180 - 0) + 1000)
+        pulse_length = int((int(angle_deg) - 0) * (2000 - 1000) / (180 - 0) + 1000)
+        duty_cycle = int(pulse_length * 65535 / 20000)
 
-        self.pca.channels[self.channel].duty_cycle = pulse
+        self.pca.channels[self.channel].duty_cycle = duty_cycle
 
 
-DEFAULT_DRIVER_ADR = 0x40
+DEFAULT_DRIVER_ADR = 0x41
 DEFAULT_HEAD_ROTATION_CHANNEL = 0
 DEFAULT_HEAD_ROTATION_ANGLE = 90
 DEFAULT_NECK_TOP_CHANNEL = 1
@@ -36,7 +37,7 @@ DEFAULT_RIGHT_ARM_CHANNEL = 6
 DEFAULT_RIGHT_ARM_ANGLE = 40
 
 
-class Servomotors(Node):
+class ServomotorsNode(Node):
     def __init__(self):
         super().__init__("servomotors_node")
         i2c = board.I2C()
@@ -65,6 +66,8 @@ class Servomotors(Node):
             self.pca, DEFAULT_RIGHT_ARM_CHANNEL, self.get_logger()
         )
 
+        self.init()
+
         self.current_head_rotation_angle = 90
         self.current_neck_top_angle = 10
         self.current_neck_bottom_angle = 30
@@ -90,15 +93,13 @@ class Servomotors(Node):
         self.left_arm.set_angle(DEFAULT_LEFT_ARM_ANGLE)
         self.right_arm.set_angle(DEFAULT_RIGHT_ARM_ANGLE)
 
-        self.get_logger().info("Initialized servomotors")
-
     def move_arm(self, arm: str, angle: int):
         if arm == "left":
-            # max angle (up) : 40 / min angle (down) : 140
+            # Max angle (up) : 40 / min angle (down) : 140
             self.left_arm.set_angle(angle)
 
         if arm == "right":
-            # max angle (up) : 140 / min angle (down) : 40
+            # Max angle (up) : 140 / min angle (down) : 40
             self.right_arm.set_angle(angle)
 
     def move_head(self, direction: str):
@@ -152,37 +153,62 @@ class Servomotors(Node):
             self.right_eye.set_angle(angle)
 
     def move_arm_callback(self, request, response):
-        self.get_logger().info("move_arm_callback service function is called")
-        self.move_arm(request.arm_id, request.angle)
+        arm_id = request.arm_id
+        angle = request.angle
 
+        self.get_logger().debug(
+            f"move_arm_callback service called\narm_id: {arm_id}, angle: {angle}"
+        )
+
+        self.move_arm(arm_id, angle)
         response.success = True
 
         return response
 
     def move_head_callback(self, request, response):
-        self.get_logger().info("move_head_callback service function is called")
-        self.move_head(request.direction)
+        direction = request.direction
 
+        self.get_logger().debug(
+            f"move_head_callback service called\ndirection: {direction}"
+        )
+
+        self.move_head(direction)
         response.success = True
 
         return response
 
     def move_eye_callback(self, request, response):
-        self.get_logger().info("move_eye_callback service function is called")
-        self.move_eye(request.eye_id, request.angle)
+        eye_id = request.eye_id
+        angle = request.angle
 
+        self.get_logger().debug(
+            f"move_eye_callback service called\neye_id: {eye_id}, angle: {angle}"
+        )
+
+        self.move_eye(eye_id, angle)
         response.success = True
 
         return response
 
+    def cleanup(self):
+        self.pca.deinit()
+        super().destroy_node()
+        self.destroy_node()
+
 
 def main(args=None):
     rclpy.init(args=args)
-    node = Servomotors()
-    node.init()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    node = ServomotorsNode()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutdown requested, stopping node...")
+    except:
+        pass
+    finally:
+        node.cleanup()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

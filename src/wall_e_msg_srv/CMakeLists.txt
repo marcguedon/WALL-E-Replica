@@ -7,6 +7,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SwitchAI.srv"
   "srv/PlaySound.srv"
+  "srv/SetVolume.srv"
   "srv/SetIntensity.srv"
   "srv/Move.srv"
   "srv/MoveArm.srv"

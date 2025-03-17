@@ -9,6 +9,7 @@ def generate_launch_description():
         name="rosbridge",
         output="screen",
         parameters=[{"port": 9090}],
+        respawn=True,
     )
 
     web_server_node = launch_ros.actions.Node(
@@ -16,32 +17,55 @@ def generate_launch_description():
         executable="web_server_node",
         name="web_server_node",
         output="screen",
+        respawn=True,
     )
     screen_node = launch_ros.actions.Node(
-        package="wall_e_core", executable="screen_node", name="screen_node"
+        package="wall_e_core",
+        executable="screen_node",
+        name="screen_node",
+        respawn=True,
     )
     battery_node = launch_ros.actions.Node(
-        package="wall_e_core", executable="battery_node", name="battery_node"
+        package="wall_e_core",
+        executable="battery_node",
+        name="battery_node",
+        respawn=True,
     )
     soundbox_node = launch_ros.actions.Node(
-        package="wall_e_core", executable="soundbox_node", name="soundbox_node"
+        package="wall_e_core",
+        executable="soundbox_node",
+        name="soundbox_node",
+        respawn=True,
     )
     ultrasonic_sensors_node = launch_ros.actions.Node(
         package="wall_e_core",
         executable="ultrasonic_sensors_node",
         name="ultrasonic_sensors_node",
+        respawn=True,
     )
     camera_node = launch_ros.actions.Node(
-        package="wall_e_core", executable="camera_node", name="camera_node"
+        package="wall_e_core",
+        executable="camera_node",
+        name="camera_node",
+        respawn=True,
     )
     lights_node = launch_ros.actions.Node(
-        package="wall_e_core", executable="lights_node", name="lights_node"
+        package="wall_e_core",
+        executable="lights_node",
+        name="lights_node",
+        respawn=True,
     )
     motors_node = launch_ros.actions.Node(
-        package="wall_e_core", executable="motors_node", name="motors_node"
+        package="wall_e_core",
+        executable="motors_node",
+        name="motors_node",
+        respawn=True,
     )
     servomotors_node = launch_ros.actions.Node(
-        package="wall_e_core", executable="servomotors_node", name="servomotors_node"
+        package="wall_e_core",
+        executable="servomotors_node",
+        name="servomotors_node",
+        respawn=True,
     )
 
     return launch.LaunchDescription(

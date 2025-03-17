@@ -217,6 +217,17 @@ footer{
   margin-right: 6vw;
 }
 
+.soundboardTitle{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.volumeSlider{
+    margin-right: 8%;
+    cursor: pointer;
+}
+
 .soundsGrid{
   display: grid;
   grid-template-columns: repeat(3, 1fr);

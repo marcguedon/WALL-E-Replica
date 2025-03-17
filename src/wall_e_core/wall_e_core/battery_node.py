@@ -20,6 +20,7 @@ class Battery:
         in_max: int = DEFAULT_IN_MAX,
         out_min: int = DEFAULT_OUT_MIN,
         out_max: int = DEFAULT_OUT_MAX,
+        logger=None,
     ):
         """Constructor function
 
@@ -30,6 +31,8 @@ class Battery:
             out_min (int, optional): _description_. Defaults to DEFAULT_OUT_MIN.
             out_max (int, optional): _description_. Defaults to DEFAULT_OUT_MAX.
         """
+        self.logger = logger
+
         i2c = busio.I2C(board.SCL, board.SDA)
         self.adc = ADS.ADS1115(i2c, address=driverAdr)
         self.channel = AnalogIn(self.adc, ADS.P0)
@@ -45,15 +48,14 @@ class Battery:
             int: Battery percentage
         """
         adc_value = self.channel.value
-        
-        return (
-            int(
-                (adc_value - self.in_min)
-                * (self.out_max - self.out_min)
-                / (self.in_max - self.in_min)
-            )
+        pct_battery_charge = int(
+            (adc_value - self.in_min)
+            * (self.out_max - self.out_min)
+            / (self.in_max - self.in_min)
             + self.out_min
         )
+
+        return pct_battery_charge
 
 
 DEFAULT_RATE = 1
@@ -61,10 +63,7 @@ DEFAULT_ADR = 0x48
 
 
 class BatteryNode(Node):
-    def __init__(
-        self,
-        rate: float = DEFAULT_RATE,
-    ):
+    def __init__(self, rate: float = DEFAULT_RATE):
         """Constructor function
 
         Args:
@@ -72,7 +71,7 @@ class BatteryNode(Node):
         """
         super().__init__("battery_node")
 
-        self.battery = Battery(DEFAULT_ADR)
+        self.battery = Battery(DEFAULT_ADR, logger=self.get_logger())
         self.rate = rate
 
         self.battery_charge_publisher = self.create_publisher(
@@ -84,15 +83,30 @@ class BatteryNode(Node):
         """Callback function that is called every X secondes, and sends the battery percentage to the topic"""
         msg = Int8()
         msg.data = self.battery.get_charge_percentage()
+
         self.battery_charge_publisher.publish(msg)
+        self.get_logger().debug(
+            f"publish_battery_charge published\nmsg.data: {msg.data}"
+        )
+
+    def cleanup(self):
+        super().destroy_node()
+        self.destroy_node()
 
 
 def main(args=None):
     rclpy.init(args=args)
-    battery_node = BatteryNode()
-    rclpy.spin(battery_node)
-    battery_node.destroy_node()
-    rclpy.shutdown()
+    node = BatteryNode()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutdown requested, stopping node...")
+    except:
+        pass
+    finally:
+        node.cleanup()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

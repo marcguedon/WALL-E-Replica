@@ -1,3 +1,4 @@
-string sound_file
+uint8 sound_id
+float32 duration
 ---
 bool success

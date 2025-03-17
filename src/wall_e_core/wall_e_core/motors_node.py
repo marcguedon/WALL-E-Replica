@@ -20,11 +20,8 @@ class Motor:
             return
 
         abs_speed = min(abs(speed), 1)
-        speed_pct = int(abs_speed * 4095)  # PWM range for PCA9685 is 0 to 4095
-        forward = speed > 0 
-
-        if self.logger:
-            self.logger.info(f"Motor running at speed: {speed_pct}%")
+        speed_pct = int(abs_speed * 65535)  # PWM range for PCA9685 is 0 to 4095
+        forward = speed > 0
 
         self.pca.channels[self.pwm].duty_cycle = speed_pct
 
@@ -51,7 +48,7 @@ class MotorsNode(Node):
         super().__init__("motors_node")
         i2c = board.I2C()
         self.pca = PCA9685(i2c, address=DEFAULT_DRIVER_ADR)
-        self.pca.frequency = 60
+        self.pca.frequency = 1000
 
         self.left_motor = Motor(
             self.pca, DEFAULT_A_PWM, DEFAULT_A_IN1, DEFAULT_A_IN2, self.get_logger()
@@ -91,20 +88,37 @@ class MotorsNode(Node):
                 self.run_motors(y_direction, signed_magnitude)
 
     def move_callback(self, request, response):
-        # self.get_logger().info(f"move_callback service is called")
-        self.move(request.x_direction, request.y_direction)
+        x_direction = request.x_direction
+        y_direction = request.y_direction
 
+        self.get_logger().debug(
+            f"move_callback service called\nx_direction: {x_direction}, y_direction:{y_direction}"
+        )
+
+        self.move(x_direction, y_direction)
         response.success = True
 
         return response
+
+    def cleanup(self):
+        self.pca.deinit()
+        super().destroy_node()
+        self.destroy_node()
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = MotorsNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutdown requested, stopping node...")
+    except:
+        pass
+    finally:
+        node.cleanup()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

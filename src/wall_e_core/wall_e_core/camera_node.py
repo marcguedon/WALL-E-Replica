@@ -1,21 +1,13 @@
 import cv2
 import mediapipe as mp
 import rclpy
-import ffmpeg
-import os
-import numpy as np
 from rclpy.node import Node
-from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from wall_e_msg_srv.srv import SwitchAI
 
 DEFAULT_CAMERA_INDEX = 0
-# TEST FFMEG
-# IMAGE_PATH = "/tmp/video_stream.h264"
-############
-# TEST JPG
-# IMAGE_PATH = "/tmp/video_stream.jpg"
-##########
+DEFAULT_FRAME_WIDTH = 640
+DEFAULT_FRAME_HEIGHT = 480
 
 
 class Camera:
@@ -28,96 +20,47 @@ class Camera:
         self.logger = logger
 
         self.display_ai_overlay = False
-        self.mp_hands = mp.solutions.hands.Hands()
-
-        # TEST FFMEG
-        # self.process = (
-        #     ffmpeg.input("/tmp/video_stream.h264")
-        #     .output("pipe:1", format="rawvideo", pix_fmt="bgr24")
-        #     .run_async(pipe_stdout=True, pipe_stderr=True)
-        # )
-        ############
-        
-        # TEST LIBCAMERA
-        self.process = subprocess.Popen(
-            ["libcamera-vid", "--width", "640", "--height", "480", "--framerate", "30", "--codec", "raw", "-o", "-"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            bufsize=640 * 480 * 3,
+        self.mp_hands = mp.solutions.hands.Hands(
+            min_detection_confidence=0.8, min_tracking_confidence=0.8
         )
-        ################
+        # self.mp_poses = mp.solutions.pose.Pose(
+        #     min_detection_confidence=0.8, min_tracking_confidence=0.8
+        # )
+        self.mp_drawing = mp.solutions.drawing_utils
+
+        self.camera = cv2.VideoCapture(camera_index)
+
+        if not self.camera.isOpened():
+            raise Exception("Error while initializing camera")
+
+        self.camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, DEFAULT_FRAME_WIDTH)
+        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, DEFAULT_FRAME_HEIGHT)
 
     def get_camera_capture(self):
-        # TEST FFMEG
-        # in_bytes = self.process.stdout.read(640 * 480 * 3)
+        ret, frame = self.camera.read()
 
-        # if len(in_bytes) < 640 * 480 * 3:
-        #     return
-
-        # data = np.frombuffer(in_bytes, np.uint8).reshape([480, 640, 3])
-        ############
-        
-        # TEST JPG
-        # if not os.path.exists(IMAGE_PATH):
-        #     return None
-        
-        # image = cv2.imread(IMAGE_PATH)
-        # if image is None:
-        #     return None
-
-        # image = cv2.resize(image, (640, 480))
-        ##########
-
-        # TEST LIBCAMERA
-        raw_frame = self.process.stdout.read(640 * 480 * 3)
-        if len(raw_frame) < 640 * 480 * 3:
-            return None
-
-        data = np.frombuffer(raw_frame, dtype=np.uint8).reshape((480, 640, 3))
-        ################
+        if not ret:
+            raise Exception("Error while capturing image")
 
         if self.display_ai_overlay:
-            image = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            results = self.mp_hands.process(image)
+            hands_results = self.mp_hands.process(frame)
+            # poses_results = self.mp_poses.process(frame)
 
-            # Displaying landmarks for each detected hand
-            if results.multi_hand_landmarks:
-                for hand_landmarks in results.multi_hand_landmarks:
-                    for landmark in hand_landmarks.landmark:
-                        x = min(int(landmark.x * data.shape[1]), data.shape[1] - 1)
-                        y = min(int(landmark.y * data.shape[0]), data.shape[0] - 1)
-                        cv2.circle(data, (x, y), 5, (0, 255, 0), -1)
+            if hands_results.multi_hand_landmarks:
+                for hand_landmarks in hands_results.multi_hand_landmarks:
+                    self.mp_drawing.draw_landmarks(
+                        frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS
+                    )
 
-                    connections = mp.solutions.holistic.HAND_CONNECTIONS
-                    for connection in connections:
-                        x0 = min(
-                            int(
-                                hand_landmarks.landmark[connection[0]].x * data.shape[1]
-                            ),
-                            data.shape[1] - 1,
-                        )
-                        y0 = min(
-                            int(
-                                hand_landmarks.landmark[connection[0]].y * data.shape[0]
-                            ),
-                            data.shape[0] - 1,
-                        )
-                        x1 = min(
-                            int(
-                                hand_landmarks.landmark[connection[1]].x * data.shape[1]
-                            ),
-                            data.shape[1] - 1,
-                        )
-                        y1 = min(
-                            int(
-                                hand_landmarks.landmark[connection[1]].y * data.shape[0]
-                            ),
-                            data.shape[0] - 1,
-                        )
-                        cv2.line(data, (x0, y0), (x1, y1), (0, 255, 0), 2)
+            # if poses_results.pose_landmarks:
+            #     self.mp_drawing.draw_landmarks(
+            #         frame, poses_results.pose_landmarks, self.mp_poses.POSE_CONNECTIONS
+            #     )
 
-        return data
+        return frame
 
     def switch_ai(self, display_ai: bool):
         """Switches on/off the AI overlay of the camera
@@ -125,12 +68,13 @@ class Camera:
         Args:
             display_ai (bool): _description_ # TODO
         """
-        self.display_ai_overlay = display_ai
+        # self.display_ai_overlay = display_ai
+        pass
 
     def release_camera(self):
         """Releases the camera"""
         self.mp_hands.close()
-        
+
         self.process.terminate()
         self.process.wait()
 
@@ -147,9 +91,8 @@ class CameraNode(Node):
         """
         super().__init__("camera_node")
 
-        self.camera = Camera(self.get_logger())
+        self.camera = Camera(logger=self.get_logger())
         self.framerate = framerate
-        self.bridge = CvBridge()
 
         self.frame_publisher = self.create_publisher(Image, "camera_frame_topic", 10)
         self.switch_ai_srv = self.create_service(
@@ -170,6 +113,10 @@ class CameraNode(Node):
 
         ret, jpeg_frame = cv2.imencode(".jpg", frame)
 
+        if not ret:
+            self.get_logger().error("Failed to encode frame to JPEG")
+            return
+
         msg = Image()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "camera"
@@ -181,12 +128,7 @@ class CameraNode(Node):
         msg.data = jpeg_frame.tobytes()
 
         self.frame_publisher.publish(msg)
-
-    def destroy_node(self):
-        """Libère la caméra lors de l'arrêt du node"""
-        super().destroy_node()
-
-        self.get_logger().info(f"Stop camera capture")
+        self.get_logger().debug(f"Message published from publish_frame_callback")
 
     def switch_ai_callback(self, request, response):
         """Callback function to switch on/off the AI overlay
@@ -200,13 +142,25 @@ class CameraNode(Node):
 
         return response
 
+    def cleanup(self):
+        self.camera.release()
+        super().destroy_node()
+        self.destroy_node()
+
 
 def main(args=None):
     rclpy.init(args=args)
-    camera_node = CameraNode()
-    rclpy.spin(camera_node)
-    camera_node.destroy_node()
-    rclpy.shutdown()
+    node = CameraNode()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutdown requested, stopping node...")
+    except:
+        pass
+    finally:
+        node.cleanup()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

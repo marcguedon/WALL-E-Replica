@@ -328,9 +328,8 @@ var move_service = new ROSLIB.Service({
   serviceType: "wall_e_msg_srv/Move",
 });
 
-//Used to move WALL-E
 function update_movement(dx, dy) {
-  //   console.log("update_movement service function is called");
+  // console.log("update_movement service function is called");
   next_dx = dx;
   next_dy = dy;
 
@@ -439,7 +438,7 @@ var make_sound_service = new ROSLIB.Service({
 });
 
 function play_sound(sound_number) {
-  //   console.log("play_sound service function is called");
+  // console.log("play_sound service function is called");
   var sound = document.getElementById("sound" + sound_number);
   var progress_bar = document.getElementById("progressBar" + sound_number);
   var sound_duration = sound.duration;
@@ -457,14 +456,34 @@ function play_sound(sound_number) {
   });
 
   var request = new ROSLIB.ServiceRequest({
-    sound: sound_number,
-    duration: sound_duration,
+    sound_id: parseInt(sound_number, 10),
+    duration: parseFloat(sound_duration),
   });
 
   make_sound_service.callService(request, function (result) {
     if (result.success) console.log("WALL-E played the sound with success.");
     else console.log("Error while sound reading.");
   });
+}
+
+var set_volume_service = new ROSLIB.Service({
+    ros: ros,
+    name: "/set_volume",
+    serviceType: "wall_e_msg_srv/SetVolume",
+});
+  
+function set_volume(volume) {
+    // console.log("set_volume service function is called")
+  
+    var request = new ROSLIB.ServiceRequest({
+      volume: parseInt(volume, 10),
+    });
+  
+    set_volume_service.callService(request, function (result) {
+      if (result.success)
+        console.log("WALL-E modified volume with success.");
+      else console.log("Error while modifying the volume.");
+    });
 }
 
 var switch_ai_service = new ROSLIB.Service({
@@ -517,7 +536,7 @@ function switch_light() {
 
   var request = new ROSLIB.ServiceRequest({
     light_id: "camera_light",
-    intensity_pct: intensity_pct,
+    intensity_pct: parseInt(intensity_pct, 10),
   });
 
   set_intensity_service.callService(request, function (result) {
