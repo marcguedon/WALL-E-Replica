@@ -20,6 +20,7 @@ class Camera:
         self.logger = logger
 
         self.display_ai_overlay = False
+
         self.mp_hands = mp.solutions.hands.Hands(
             min_detection_confidence=0.8, min_tracking_confidence=0.8
         )
@@ -68,15 +69,15 @@ class Camera:
         Args:
             display_ai (bool): _description_ # TODO
         """
-        # self.display_ai_overlay = display_ai
+        self.display_ai_overlay = display_ai
         pass
 
-    def release_camera(self):
+    def release(self):
         """Releases the camera"""
         self.mp_hands.close()
+        # self.mp_poses.close()
 
-        self.process.terminate()
-        self.process.wait()
+        self.camera.release()
 
 
 DEFAULT_FRAMERATE = 30
@@ -102,33 +103,36 @@ class CameraNode(Node):
         self.timer = self.create_timer(
             1.0 / self.framerate, self.publish_frame_callback
         )
-        self.get_logger().info(f"Start camera capture")
 
     def publish_frame_callback(self):
         """Capture et publie une image"""
-        frame = self.camera.get_camera_capture()
+        try:
+            frame = self.camera.get_camera_capture()
 
-        if frame is None or frame.size == 0:
-            return
+            if frame is None or frame.size == 0:
+                self.get_logger().error("Frame is none or has no size")
+                return
 
-        ret, jpeg_frame = cv2.imencode(".jpg", frame)
+            ret, jpeg_frame = cv2.imencode(".jpg", frame)
 
-        if not ret:
-            self.get_logger().error("Failed to encode frame to JPEG")
-            return
+            if not ret:
+                self.get_logger().error("Failed to encode frame to JPEG")
+                return
 
-        msg = Image()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "camera"
-        msg.height = frame.shape[0]
-        msg.width = frame.shape[1]
-        msg.encoding = "jpeg"
-        msg.is_bigendian = 0
-        msg.step = frame.shape[1] * 3
-        msg.data = jpeg_frame.tobytes()
+            msg = Image()
+            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.header.frame_id = "camera"
+            msg.height = frame.shape[0]
+            msg.width = frame.shape[1]
+            msg.encoding = "jpeg"
+            msg.is_bigendian = 0
+            msg.step = frame.shape[1] * 3
+            msg.data = jpeg_frame.tobytes()
 
-        self.frame_publisher.publish(msg)
-        self.get_logger().debug(f"Message published from publish_frame_callback")
+            self.frame_publisher.publish(msg)
+            self.get_logger().debug(f"Message published from publish_frame_callback")
+        except Exception as e:
+            self.get_logger().error(f"{e}")
 
     def switch_ai_callback(self, request, response):
         """Callback function to switch on/off the AI overlay

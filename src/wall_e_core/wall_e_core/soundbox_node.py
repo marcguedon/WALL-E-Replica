@@ -1,7 +1,7 @@
 import rclpy
 import os
+from pygame import mixer, error
 from rclpy.node import Node
-from pygame import mixer
 from wall_e_msg_srv.srv import PlaySound
 from wall_e_msg_srv.srv import SetVolume
 
@@ -19,7 +19,12 @@ class SoundBoxNode(Node):
         if not os.path.exists(self.path):
             raise FileNotFoundError(f"Sounds folder not found: {self.path}")
 
-        mixer.init()
+        try:
+            mixer.init(buffer=2048, devicename="bcm2835 Headphones, bcm2835 Headphones")
+        except error as e:
+            self.get_logger().error(f"Failed to initialize pygame mixer: {e}")
+            raise
+
         mixer.music.set_volume(0.2)
 
         self.play_sound_srv = self.create_service(

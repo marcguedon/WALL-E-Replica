@@ -8,11 +8,12 @@ from wall_e_msg_srv.srv import Move
 
 class Motor:
     def __init__(self, pca, pwm: int, in1: int, in2: int, logger=None):
+        self.logger = logger
+        
         self.pca = pca
         self.pwm = pwm
         self.in1 = in1
         self.in2 = in2
-        self.logger = logger
 
     def run(self, speed: float):
         if speed == 0:

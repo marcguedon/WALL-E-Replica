@@ -1,15 +1,13 @@
 import board
-import rclpy
 import displayio
 import os
+import time
 import adafruit_display_shapes.rect as rect
 from fourwire import FourWire
 from adafruit_st7789 import ST7789
-from rclpy.node import Node
-from std_msgs.msg import Int8
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
-WORKSPACE_DIR = os.path.abspath(os.path.join(PACKAGE_DIR, "../../../../../.."))
+WORKSPACE_DIR = os.path.abspath(os.path.join(PACKAGE_DIR, "../../.."))
 IMAGE_DIR = os.path.join(WORKSPACE_DIR, "images")
 WALL_E_IMAGE = os.path.join(IMAGE_DIR, "wall-e.bmp")
 
@@ -22,9 +20,7 @@ BLACK = 0x000000
 
 
 class Screen:
-    def __init__(self, logger=None):
-        self.logger = logger
-
+    def __init__(self):
         if not os.path.exists(IMAGE_DIR):
             raise FileNotFoundError(f"Image folder not found: {IMAGE_DIR}")
 
@@ -43,7 +39,10 @@ class Screen:
         )
 
         self.display = ST7789(
-            display_bus, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, rowstart=80
+            display_bus,
+            width=SCREEN_WIDTH,
+            height=SCREEN_HEIGHT,
+            rowstart=80,
         )
         self.display.rotation = 180
 
@@ -83,7 +82,7 @@ class Screen:
                     ((battery_pct // 11 * 11) - 100) * (145 - 0) / (10 - 100) + 0
                 )
 
-        self.hidding_rect = rect.Rect(100, 59, width=130, height=height, fill=BLACK)
+        self.hidding_rect = rect.Rect(100, 59, width=130, height=height, fill=0x00FF00)
 
         self.splash.append(self.hidding_rect)
         self.display.root_group = self.splash
@@ -96,43 +95,14 @@ class Screen:
         self.display.root_group = self.splash
 
 
-class ScreenNode(Node):
-    def __init__(self):
-        super().__init__("screen_node")
-
-        self.screen = Screen(logger=self.get_logger())
-
-        self.battery_charge_subscription = self.create_subscription(
-            Int8, "battery_charge_topic", self.battery_charge_callback, 10
-        )
-
-    def battery_charge_callback(self, msg):
-        battery_pct = msg.data
-
-        self.screen.update_battery_charge(battery_pct)
-        self.get_logger().debug(
-            f"battery_charge_callback calles\nbattery_pct: {battery_pct}"
-        )
-
-    def cleanup(self):
-        self.screen.clear()
-        super().destroy_node()
-        self.destroy_node()
-
-
 def main(args=None):
-    rclpy.init(args=args)
-    node = ScreenNode()
+    screen = Screen()
 
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        node.get_logger().info("Shutdown requested, stopping node...")
-    except:
-        pass
-    finally:
-        node.cleanup()
-        rclpy.shutdown()
+    while True:
+        for i in range(0, 101, 10):
+            screen.update_battery_charge(i)
+            print(i)
+            time.sleep(2)
 
 
 if __name__ == "__main__":

@@ -9,9 +9,10 @@ from wall_e_msg_srv.srv import MoveHead
 
 class Servomotor:
     def __init__(self, pca, channel: int, logger=None):
+        self.logger = logger
+        
         self.pca = pca
         self.channel = channel
-        self.logger = logger
 
     def set_angle(self, angle_deg: int):
         pulse_length = int((int(angle_deg) - 0) * (2000 - 1000) / (180 - 0) + 1000)
