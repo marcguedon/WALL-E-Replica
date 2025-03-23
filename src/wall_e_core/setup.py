@@ -30,6 +30,7 @@ setup(
             "motors_node = wall_e_core.motors_node:main",
             "soundbox_node = wall_e_core.soundbox_node:main",
             "servomotors_node = wall_e_core.servomotors_node:main",
+            "automatic_mode_node = wall_e_core.automatic_mode_node:main",
         ],
     },
 )

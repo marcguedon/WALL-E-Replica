@@ -24,6 +24,7 @@ class WebServerNode(Node):
     def run(self):
         os.chdir(WEB_DIR)
         handler = http.server.SimpleHTTPRequestHandler
+        
         with socketserver.TCPServer(("", PORT), handler) as httpd:
             self.get_logger().info(f"Online web server on http://localhost:{PORT}")
             

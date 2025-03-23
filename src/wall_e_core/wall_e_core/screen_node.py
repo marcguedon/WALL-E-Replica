@@ -111,7 +111,7 @@ class ScreenNode(Node):
 
         self.screen.update_battery_charge(battery_pct)
         self.get_logger().debug(
-            f"battery_charge_callback calles\nbattery_pct: {battery_pct}"
+            f"battery_charge_callback called\nbattery_pct: {battery_pct}"
         )
 
     def cleanup(self):

@@ -13,6 +13,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/MoveArm.srv"
   "srv/MoveHead.srv"
   "srv/MoveEye.srv"
+  "srv/SwitchAutomaticMode.srv"
 )
 
 ament_export_dependencies(rosidl_default_runtime)

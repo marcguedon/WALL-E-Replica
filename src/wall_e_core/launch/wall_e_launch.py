@@ -67,6 +67,12 @@ def generate_launch_description():
         name="servomotors_node",
         respawn=True,
     )
+    automatic_mode_node = launch_ros.actions.Node(
+        package="wall_e_core",
+        executable="automatic_mode_node",
+        name="automatic_mode_node",
+        respawn=True,
+    )
 
     return launch.LaunchDescription(
         [
@@ -80,5 +86,6 @@ def generate_launch_description():
             lights_node,
             motors_node,
             servomotors_node,
+            automatic_mode_node,
         ]
     )

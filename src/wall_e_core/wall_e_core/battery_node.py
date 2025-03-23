@@ -22,15 +22,6 @@ class Battery:
         out_max: int = DEFAULT_OUT_MAX,
         logger=None,
     ):
-        """Constructor function
-
-        Args:
-            driverAdr (int): Adress of the ADC module
-            in_min (int, optional): _description_. Defaults to DEFAULT_IN_MIN.
-            in_max (int, optional): _description_. Defaults to DEFAULT_IN_MAX.
-            out_min (int, optional): _description_. Defaults to DEFAULT_OUT_MIN.
-            out_max (int, optional): _description_. Defaults to DEFAULT_OUT_MAX.
-        """
         self.logger = logger
 
         i2c = busio.I2C(board.SCL, board.SDA)
@@ -42,11 +33,6 @@ class Battery:
         self.out_max = out_max
 
     def get_charge_percentage(self):
-        """Returns the battery charge percentage as an int
-
-        Returns:
-            int: Battery percentage
-        """
         adc_value = self.channel.value
         pct_battery_charge = int(
             (adc_value - self.in_min)
@@ -64,11 +50,6 @@ DEFAULT_ADR = 0x48
 
 class BatteryNode(Node):
     def __init__(self, rate: float = DEFAULT_RATE):
-        """Constructor function
-
-        Args:
-            rate (int, optional): Numbers of posts per second. Defaults to DEFAULT_RATE.
-        """
         super().__init__("battery_node")
 
         self.battery = Battery(DEFAULT_ADR, logger=self.get_logger())
@@ -80,7 +61,6 @@ class BatteryNode(Node):
         self.timer = self.create_timer(1.0 / self.rate, self.publish_battery_charge)
 
     def publish_battery_charge(self):
-        """Callback function that is called every X secondes, and sends the battery percentage to the topic"""
         msg = Int8()
         msg.data = self.battery.get_charge_percentage()
 

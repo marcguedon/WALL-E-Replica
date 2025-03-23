@@ -96,7 +96,7 @@ footer{
 }
 
 .informationsSection .data{
-  padding-left: 15px;
+  padding-left: 5px;
 }
 
 .informationsSection .data > div{
@@ -195,10 +195,6 @@ footer{
   background-size: cover;
 }
 
-.cameraControls > #AIButton{
-  background-image: url('../images/AIOff2.png');
-}
-
 .cameraControls > #lightButton{
   background-image: url('../images/bulbOff2.png');
 }
@@ -258,6 +254,10 @@ footer{
 
 .soundButton:hover{
   cursor: pointer;
+}
+
+.soundButton:disabled{
+  cursor: not-allowed;
 }
 
 .controlsSection{
@@ -408,7 +408,6 @@ input[type=range].armSlider:disabled{
 
 input[type=range].armSlider {
   height: 100%;
-  appearance: slider-vertical;
   background-color: transparent;
   width: 17px;
   cursor: pointer;
@@ -420,7 +419,6 @@ input[type=range].armSlider {
 
 /*input[type=range].armSlider {
   height: 100%;
-  -webkit-appearance: slider-vertical;
   background-color: transparent;
   width: 17px;
 }

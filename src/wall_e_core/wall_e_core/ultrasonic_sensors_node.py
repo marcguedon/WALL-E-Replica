@@ -56,11 +56,6 @@ BCM_RIGHT_ECHO_PIN = 23
 
 class UltrasonicSensorsNode(Node):
     def __init__(self, rate: float = DEFAULT_RATE):
-        """Constructor function
-
-        Args:
-            rate (float, optional): Numbers of posts per second. Defaults to DEFAULT_RATE.
-        """
         super().__init__("ultrasonic_sensors_node")
 
         self.sensors = [

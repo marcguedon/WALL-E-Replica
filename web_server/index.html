@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" type="text/css" href="css/style.css" />
-    <script src="js/roslib.js"></script>
+    <script type="text/javascript" src="js/roslib.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
     <title>WALL-E interface</title>
   </head>
@@ -28,7 +28,7 @@
               <p id="batteryPercent"></p>
             </div>
             <div class="action">
-              <p>Walking...</p>
+              <p>Status: Walking...</p>
             </div>
             <div class="sensors">
               <p id="leftSensor"></p>
@@ -44,12 +44,6 @@
             <div class="camera">
               <img id="cameraDisplay" alt="Camera display" draggable="false" />
               <div class="cameraControls">
-                <button
-                  id="AIButton"
-                  class="cameraButton"
-                  title="SWITCH AI ON/OFF"
-                  onclick="switch_ai()"
-                ></button>
                 <button
                   id="lightButton"
                   class="cameraButton"
@@ -198,7 +192,7 @@
                 <input
                   type="checkbox"
                   id="autoCheckbox"
-                  onchange="switch_operating_mode()"
+                  onchange="switch_automatic_mode()"
                 />
                 <span class="slider round"></span>
               </label>
@@ -254,7 +248,7 @@
       <footer>
         <p>Author : Marc GUEDON / Website :</p>
         <a href="http://thedraill.e-monsite.com/" target="_blank"
-          >http://thedraill.e-monsite.com/</a
+          >https://thedraill.e-monsite.com/</a
         >
       </footer>
     </div>

@@ -1,33 +1,20 @@
 import cv2
-import mediapipe as mp
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from wall_e_msg_srv.srv import SwitchAI
 
 DEFAULT_CAMERA_INDEX = 0
-DEFAULT_FRAME_WIDTH = 640
-DEFAULT_FRAME_HEIGHT = 480
 
 
 class Camera:
-    def __init__(self, camera_index: int = DEFAULT_CAMERA_INDEX, logger=None):
-        """Captures pictures to display it with or without AI overlay
-
-        Args:
-            camera_index (int, optional): Index of the camera. Defaults to DEFAULT_CAMERA_INDEX.
-        """
+    def __init__(
+        self,
+        height: int,
+        width: int,
+        camera_index: int = DEFAULT_CAMERA_INDEX,
+        logger=None,
+    ):
         self.logger = logger
-
-        self.display_ai_overlay = False
-
-        self.mp_hands = mp.solutions.hands.Hands(
-            min_detection_confidence=0.8, min_tracking_confidence=0.8
-        )
-        # self.mp_poses = mp.solutions.pose.Pose(
-        #     min_detection_confidence=0.8, min_tracking_confidence=0.8
-        # )
-        self.mp_drawing = mp.solutions.drawing_utils
 
         self.camera = cv2.VideoCapture(camera_index)
 
@@ -35,8 +22,8 @@ class Camera:
             raise Exception("Error while initializing camera")
 
         self.camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, DEFAULT_FRAME_WIDTH)
-        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, DEFAULT_FRAME_HEIGHT)
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
     def get_camera_capture(self):
         ret, frame = self.camera.read()
@@ -44,107 +31,58 @@ class Camera:
         if not ret:
             raise Exception("Error while capturing image")
 
-        if self.display_ai_overlay:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            hands_results = self.mp_hands.process(frame)
-            # poses_results = self.mp_poses.process(frame)
-
-            if hands_results.multi_hand_landmarks:
-                for hand_landmarks in hands_results.multi_hand_landmarks:
-                    self.mp_drawing.draw_landmarks(
-                        frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS
-                    )
-
-            # if poses_results.pose_landmarks:
-            #     self.mp_drawing.draw_landmarks(
-            #         frame, poses_results.pose_landmarks, self.mp_poses.POSE_CONNECTIONS
-            #     )
-
         return frame
 
-    def switch_ai(self, display_ai: bool):
-        """Switches on/off the AI overlay of the camera
-
-        Args:
-            display_ai (bool): _description_ # TODO
-        """
-        self.display_ai_overlay = display_ai
-        pass
-
     def release(self):
-        """Releases the camera"""
-        self.mp_hands.close()
-        # self.mp_poses.close()
-
         self.camera.release()
 
 
 DEFAULT_FRAMERATE = 30
+FRAME_WIDTH = 640
+FRAME_HEIGHT = 480
 
 
 class CameraNode(Node):
     def __init__(self, framerate: int = DEFAULT_FRAMERATE):
-        """_summary_
-
-        Args:
-            framerate (int, optional): Numbers of captured pictures per second. Defaults to DEFAULT_FRAMERATE.
-        """
         super().__init__("camera_node")
 
-        self.camera = Camera(logger=self.get_logger())
+        self.camera = Camera(FRAME_HEIGHT, FRAME_WIDTH, logger=self.get_logger())
         self.framerate = framerate
 
         self.frame_publisher = self.create_publisher(Image, "camera_frame_topic", 10)
-        self.switch_ai_srv = self.create_service(
-            SwitchAI, "switch_ai", self.switch_ai_callback
-        )
 
         self.timer = self.create_timer(
             1.0 / self.framerate, self.publish_frame_callback
         )
 
     def publish_frame_callback(self):
-        """Capture et publie une image"""
         try:
             frame = self.camera.get_camera_capture()
-
-            if frame is None or frame.size == 0:
-                self.get_logger().error("Frame is none or has no size")
-                return
-
-            ret, jpeg_frame = cv2.imencode(".jpg", frame)
-
-            if not ret:
-                self.get_logger().error("Failed to encode frame to JPEG")
-                return
-
-            msg = Image()
-            msg.header.stamp = self.get_clock().now().to_msg()
-            msg.header.frame_id = "camera"
-            msg.height = frame.shape[0]
-            msg.width = frame.shape[1]
-            msg.encoding = "jpeg"
-            msg.is_bigendian = 0
-            msg.step = frame.shape[1] * 3
-            msg.data = jpeg_frame.tobytes()
-
-            self.frame_publisher.publish(msg)
-            self.get_logger().debug(f"Message published from publish_frame_callback")
         except Exception as e:
             self.get_logger().error(f"{e}")
 
-    def switch_ai_callback(self, request, response):
-        """Callback function to switch on/off the AI overlay
+        if frame is None or frame.size == 0:
+            self.get_logger().error("Frame is none or has no size")
+            return
 
-        Args:
-            request (_type_): _description_
-            response (_type_): _description_
-        """
-        self.camera.switch_ai(request.ai_on)
-        response.success = True
+        ret, jpeg_frame = cv2.imencode(".jpg", frame)
 
-        return response
+        if not ret:
+            self.get_logger().error("Failed to encode frame to JPEG")
+            return
+
+        msg = Image()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "camera"
+        msg.height = frame.shape[0]
+        msg.width = frame.shape[1]
+        msg.encoding = "jpeg"
+        msg.is_bigendian = 0
+        msg.step = frame.shape[1] * 3
+        msg.data = jpeg_frame.tobytes()
+
+        self.frame_publisher.publish(msg)
+        self.get_logger().debug(f"Message published from publish_frame_callback")
 
     def cleanup(self):
         self.camera.release()
