@@ -3,15 +3,13 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 
-DEFAULT_CAMERA_INDEX = 0
-
 
 class Camera:
     def __init__(
         self,
-        height: int,
+        camera_index: int,
         width: int,
-        camera_index: int = DEFAULT_CAMERA_INDEX,
+        height: int,
         logger=None,
     ):
         self.logger = logger
@@ -41,19 +39,36 @@ DEFAULT_FRAMERATE = 30
 FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 
+DEFAULT_CAMERA_INDEX = 0
+
 
 class CameraNode(Node):
     def __init__(self, framerate: int = DEFAULT_FRAMERATE):
         super().__init__("camera_node")
 
-        self.camera = Camera(FRAME_HEIGHT, FRAME_WIDTH, logger=self.get_logger())
-        self.framerate = framerate
+        self.declare_parameter("camera_index", DEFAULT_CAMERA_INDEX)
+        self.declare_parameter("framerate", DEFAULT_FRAMERATE)
+        self.declare_parameter("frame_width", FRAME_WIDTH)
+        self.declare_parameter("frame_height", FRAME_HEIGHT)
+
+        camera_index = (
+            self.get_parameter("camera_index").get_parameter_value().integer_value
+        )
+        framerate = self.get_parameter("framerate").get_parameter_value().integer_value
+        frame_width = (
+            self.get_parameter("frame_width").get_parameter_value().integer_value
+        )
+        frame_height = (
+            self.get_parameter("frame_height").get_parameter_value().integer_value
+        )
+
+        self.camera = Camera(
+            camera_index, frame_width, frame_height, logger=self.get_logger()
+        )
 
         self.frame_publisher = self.create_publisher(Image, "camera_frame_topic", 10)
 
-        self.timer = self.create_timer(
-            1.0 / self.framerate, self.publish_frame_callback
-        )
+        self.timer = self.create_timer(1.0 / framerate, self.publish_frame_callback)
 
     def publish_frame_callback(self):
         try:

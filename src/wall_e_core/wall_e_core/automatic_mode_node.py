@@ -4,17 +4,30 @@ import numpy as np
 from ultralytics import YOLO
 from rclpy.node import Node
 from wall_e_msg_srv.srv import SwitchAutomaticMode
+from wall_e_msg_srv.srv import GetAutomaticMode
 from sensor_msgs.msg import Image
 from wall_e_msg_srv.srv import Move
-from wall_e_msg_srv.srv import SetIntensity
+from wall_e_msg_srv.srv import SetLightIntensity
 
-TARGET_DISTANCE_M = 1.0
+TARGETED_DISTANCE_M = 1.0
 BRIGHTNESS_THRESHOLD = 50
 
 
 class AutomaticModeNode(Node):
     def __init__(self):
         super().__init__("automatic_mode_node")
+
+        self.declare_parameter("targeted_distance", TARGETED_DISTANCE_M)
+        self.declare_parameter("brightness_threshold", BRIGHTNESS_THRESHOLD)
+
+        self.targeted_distance = (
+            self.get_parameter("targeted_distance").get_parameter_value().double_value
+        )
+        self.brightness_threshold = (
+            self.get_parameter("brightness_threshold")
+            .get_parameter_value()
+            .integer_value
+        )
 
         self.is_active = False
 
@@ -24,6 +37,12 @@ class AutomaticModeNode(Node):
             self.switch_automatic_mode_callback,
         )
 
+        self.get_automatic_mode_srv = self.create_service(
+            GetAutomaticMode,
+            "get_automatic_mode",
+            self.get_automatic_mode_callback,
+        )
+
         self.model = YOLO("yolov8n.pt")
         self.body_class_id = 0  # 'person' class ID
 
@@ -31,7 +50,7 @@ class AutomaticModeNode(Node):
             Image, "camera_frame_topic", self.subscribe_frame_callback, 10
         )
         self.move_client = self.create_client(Move, "move")
-        self.light_client = self.create_client(SetIntensity, "set_intensity")
+        self.light_client = self.create_client(SetLightIntensity, "set_light_intensity")
 
         while not self.move_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info(
@@ -47,7 +66,7 @@ class AutomaticModeNode(Node):
         automatic_mode_on = request.automatic_mode_on
 
         self.get_logger().debug(
-            f"switch_automatic_mode_callback service called\automatic_mode_on: {automatic_mode_on}"
+            f"switch_automatic_mode_callback service called\nautomatic_mode_on: {automatic_mode_on}"
         )
 
         self.is_active = automatic_mode_on
@@ -57,12 +76,19 @@ class AutomaticModeNode(Node):
 
         return response
 
+    def get_automatic_mode_callback(self, request, response):
+        self.get_logger().debug(f"get_automatic_mode_callback service called")
+
+        response.is_active = self.is_active
+
+        return response
+
     def subscribe_frame_callback(self, msg):
         if self.is_active:
             try:
                 frame = self.get_frame_from_message(msg)
 
-                self.process_brightness(frame)
+                self.process_brightness(frame, self.brightness_threshold)
 
                 width, height, _ = frame.shape
                 left_border = int(width / 3 * 1)
@@ -72,10 +98,10 @@ class AutomaticModeNode(Node):
                 boxes = self.get_boxes_from_results(results, self.body_class_id)
 
                 if len(boxes) > 0:
-                    box = self.filter_boxes_by_distance(boxes, TARGET_DISTANCE_M)
+                    box = self.filter_boxes_by_distance(boxes, self.targeted_distance)
 
                     self.process_box(left_border, right_border, box)
-                    
+
                 self.get_logger().debug(f"subscribe_frame_callback called")
             except Exception as e:
                 self.get_logger().error(f"{e}")
@@ -85,7 +111,7 @@ class AutomaticModeNode(Node):
         frame = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
 
         return frame
-    
+
     def process_box(self, left_border, right_border, box):
         x_min, y_min, x_max, y_max, confidence = box
         x_mid = (x_min + x_max) / 2
@@ -108,17 +134,17 @@ class AutomaticModeNode(Node):
 
         self.move_client.call_async(req)
 
-    def process_brightness(self, frame):
+    def process_brightness(self, frame, brightness_threshold: int):
         brightness = self.get_brightness(frame)
 
-        if brightness < BRIGHTNESS_THRESHOLD:
+        if brightness < brightness_threshold:
             intensity = 100
             self.get_logger().info("Brightness too low, turn light on")
         else:
             intensity = 0
             self.get_logger().info("Brightness high enough, light off")
 
-        req = SetIntensity.Request()
+        req = SetLightIntensity.Request()
         req.light_id = "camera_light"
         req.intensity_pct = intensity
 
@@ -150,7 +176,7 @@ class AutomaticModeNode(Node):
 
         return 1 / box_height
 
-    def filter_boxes_by_distance(self, boxes, target_distance_m):
+    def filter_boxes_by_distance(self, boxes, target_distance_m: float):
         closest_box = None
         min_distance_diff = float("inf")
 

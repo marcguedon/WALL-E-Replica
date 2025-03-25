@@ -8,12 +8,13 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SwitchAI.srv"
   "srv/PlaySound.srv"
   "srv/SetVolume.srv"
-  "srv/SetIntensity.srv"
+  "srv/SetLightIntensity.srv"
   "srv/Move.srv"
   "srv/MoveArm.srv"
   "srv/MoveHead.srv"
   "srv/MoveEye.srv"
   "srv/SwitchAutomaticMode.srv"
+  "srv/GetAutomaticMode.srv"
 )
 
 ament_export_dependencies(rosidl_default_runtime)

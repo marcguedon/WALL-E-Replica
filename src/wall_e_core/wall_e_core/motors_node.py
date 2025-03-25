@@ -7,55 +7,94 @@ from wall_e_msg_srv.srv import Move
 
 
 class Motor:
-    def __init__(self, pca, pwm: int, in1: int, in2: int, logger=None):
+    def __init__(self, driver, pwm: int, in1: int, in2: int, logger=None):
         self.logger = logger
-        
-        self.pca = pca
+
+        self.driver = driver
         self.pwm = pwm
         self.in1 = in1
         self.in2 = in2
 
     def run(self, speed: float):
         if speed == 0:
-            self.pca.channels[self.pwm].duty_cycle = 0x0000
+            self.driver.channels[self.pwm].duty_cycle = 0x0000
             return
 
         abs_speed = min(abs(speed), 1)
         speed_pct = int(abs_speed * 65535)  # PWM range for PCA9685 is 0 to 4095
         forward = speed > 0
 
-        self.pca.channels[self.pwm].duty_cycle = speed_pct
+        self.driver.channels[self.pwm].duty_cycle = speed_pct
 
         # Control direction using IN1 and IN2
         if forward:
-            self.pca.channels[self.in1].duty_cycle = 0x0000
-            self.pca.channels[self.in2].duty_cycle = 0xFFFF
+            self.driver.channels[self.in1].duty_cycle = 0x0000
+            self.driver.channels[self.in2].duty_cycle = 0xFFFF
         else:
-            self.pca.channels[self.in1].duty_cycle = 0xFFFF
-            self.pca.channels[self.in2].duty_cycle = 0x0000
+            self.driver.channels[self.in1].duty_cycle = 0xFFFF
+            self.driver.channels[self.in2].duty_cycle = 0x0000
 
 
 DEFAULT_DRIVER_ADR = 0x40
-DEFAULT_A_PWM = 0
-DEFAULT_A_IN1 = 1
-DEFAULT_A_IN2 = 2
-DEFAULT_B_PWM = 5
-DEFAULT_B_IN1 = 3
-DEFAULT_B_IN2 = 4
+DEFAULT_A_PWM_CHANNEL = 0
+DEFAULT_A_IN1_CHANNEL = 1
+DEFAULT_A_IN2_CHANNEL = 2
+DEFAULT_B_PWM_CHANNEL = 5
+DEFAULT_B_IN1_CHANNEL = 3
+DEFAULT_B_IN2_CHANNEL = 4
 
 
 class MotorsNode(Node):
     def __init__(self):
         super().__init__("motors_node")
+
+        self.declare_parameter("driver_adress", DEFAULT_DRIVER_ADR)
+        self.declare_parameter("a_pwm_channel", DEFAULT_A_PWM_CHANNEL)
+        self.declare_parameter("a_in1_channel", DEFAULT_A_IN1_CHANNEL)
+        self.declare_parameter("a_in2_channel", DEFAULT_A_IN2_CHANNEL)
+        self.declare_parameter("b_pwm_channel", DEFAULT_B_PWM_CHANNEL)
+        self.declare_parameter("b_in1_channel", DEFAULT_B_IN1_CHANNEL)
+        self.declare_parameter("b_in2_channel", DEFAULT_B_IN2_CHANNEL)
+
+        driver_adress = (
+            self.get_parameter("driver_adress").get_parameter_value().integer_value
+        )
+        a_pwm_channel = (
+            self.get_parameter("a_pwm_channel").get_parameter_value().integer_value
+        )
+        a_in1_channel = (
+            self.get_parameter("a_in1_channel").get_parameter_value().integer_value
+        )
+        a_in2_channel = (
+            self.get_parameter("a_in2_channel").get_parameter_value().integer_value
+        )
+        b_pwm_channel = (
+            self.get_parameter("b_pwm_channel").get_parameter_value().integer_value
+        )
+        b_in1_channel = (
+            self.get_parameter("b_in1_channel").get_parameter_value().integer_value
+        )
+        b_in2_channel = (
+            self.get_parameter("b_in2_channel").get_parameter_value().integer_value
+        )
+
         i2c = board.I2C()
-        self.pca = PCA9685(i2c, address=DEFAULT_DRIVER_ADR)
-        self.pca.frequency = 1000
+        self.driver = PCA9685(i2c, address=driver_adress)
+        self.driver.frequency = 1000
 
         self.left_motor = Motor(
-            self.pca, DEFAULT_A_PWM, DEFAULT_A_IN1, DEFAULT_A_IN2, self.get_logger()
+            self.driver,
+            a_pwm_channel,
+            a_in1_channel,
+            a_in2_channel,
+            self.get_logger(),
         )
         self.right_motor = Motor(
-            self.pca, DEFAULT_B_PWM, DEFAULT_B_IN1, DEFAULT_B_IN2, self.get_logger()
+            self.driver,
+            b_pwm_channel,
+            b_in1_channel,
+            b_in2_channel,
+            self.get_logger(),
         )
 
         self.move_srv = self.create_service(Move, "move", self.move_callback)
@@ -102,7 +141,7 @@ class MotorsNode(Node):
         return response
 
     def cleanup(self):
-        self.pca.deinit()
+        self.driver.deinit()
         super().destroy_node()
         self.destroy_node()
 

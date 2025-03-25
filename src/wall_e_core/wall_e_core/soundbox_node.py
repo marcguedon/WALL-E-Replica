@@ -10,22 +10,30 @@ WORKSPACE_DIR = os.path.abspath(os.path.join(PACKAGE_DIR, "../../../../../.."))
 WEB_DIR = os.path.join(WORKSPACE_DIR, "web_server")
 DEFAULT_SOUNDS_PATH = os.path.join(WEB_DIR, "sounds")
 
+DEVICE_NAME = "bcm2835 Headphones, bcm2835 Headphones"
+
+DEFAULT_VOLUME = 0.2
+
 
 class SoundBoxNode(Node):
-    def __init__(self, files_path=DEFAULT_SOUNDS_PATH):
+    def __init__(self):
         super().__init__("soundbox_node")
 
-        self.path = files_path
+        self.declare_parameter("default_volume", DEFAULT_VOLUME)
+
+        default_volume = self.get_parameter("default_volume").get_parameter_value().double_value
+
+        self.path = DEFAULT_SOUNDS_PATH
         if not os.path.exists(self.path):
             raise FileNotFoundError(f"Sounds folder not found: {self.path}")
 
         try:
-            mixer.init(buffer=2048, devicename="bcm2835 Headphones, bcm2835 Headphones")
+            mixer.init(buffer=2048, devicename=DEVICE_NAME)
         except error as e:
             self.get_logger().error(f"Failed to initialize pygame mixer: {e}")
             raise
 
-        mixer.music.set_volume(0.2)
+        mixer.music.set_volume(default_volume)
 
         self.play_sound_srv = self.create_service(
             PlaySound, "play_sound", self.play_sound_callback
@@ -72,7 +80,7 @@ class SoundBoxNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = SoundBoxNode(DEFAULT_SOUNDS_PATH)
+    node = SoundBoxNode()
 
     try:
         rclpy.spin(node)

@@ -1,421 +1,420 @@
 @font-face {
-  font-family: 'gunshipregular';
-  src: url('../fonts/gunship-webfont.woff2') format('woff2'),
-       url('../fonts/gunship-webfont.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
+	font-family: "gunshipregular";
+	src: url("../fonts/gunship-webfont.woff2") format("woff2"),
+		url("../fonts/gunship-webfont.woff") format("woff");
+	font-weight: normal;
+	font-style: normal;
 }
 
-*{
-  margin: 0;
+* {
+	margin: 0;
 }
 
-body{
-  display: flex;
-  justify-content: right;
-  height: 100vh;
-  background-color: #fbfbfb;
-  font-family: Arial;
+body {
+	display: flex;
+	justify-content: right;
+	height: 100vh;
+	background-color: #fbfbfb;
+	font-family: Arial;
 }
 
-h1{
-  font-size: 2.5em;
-  font-family: 'gunshipregular';
+h1 {
+	font-size: 2.5em;
+	font-family: "gunshipregular";
 }
 
-h3{
-  margin-bottom: 20px;
-  font-family: Arial, Helvetica, sans-serif;
+h3 {
+	margin-bottom: 20px;
+	font-family: Arial, Helvetica, sans-serif;
 }
 
-a{
-  margin-left: 4px;
-  color: black;
+a {
+	margin-left: 4px;
+	color: black;
 }
 
-.title{
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  top: 38vh;
-  left: 8vw;
+.title {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	top: 38vh;
+	left: 8vw;
 }
 
-.wall-e{
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
+.wall-e {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
 }
 
-.menu{
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-  padding: 40px;
-  padding-right: 60px;
-  padding-bottom: 5px;
-  justify-content: space-between;
+.menu {
+	display: flex;
+	flex-direction: column;
+	width: 100vw;
+	padding: 40px;
+	padding-right: 60px;
+	padding-bottom: 5px;
+	justify-content: space-between;
 }
 
-.line{
-  display: flex;
-  flex-direction: row;
-  justify-content: right;
+.line {
+	display: flex;
+	flex-direction: row;
+	justify-content: right;
 }
 
-.one{
-  height: 50vh;
+.one {
+	height: 50vh;
 }
 
-.two{
-  height: 35vh;
+.two {
+	height: 35vh;
 }
 
-footer{
-  display: flex;
-  justify-content: center;
-  align-content: center;
-  font-style: italic;
-  font-size: 0.8em;
+footer {
+	display: flex;
+	justify-content: center;
+	align-content: center;
+	font-style: italic;
+	font-size: 0.8em;
 }
 
-.line > div{
-  background-color: #CCCCCC;
-  border-radius: 5px;
-  padding: 10px;
-  box-shadow: 7px 7px 5px 1px #cc9858;
-  
+.line > div {
+	background-color: #cccccc;
+	border-radius: 5px;
+	padding: 10px;
+	box-shadow: 7px 7px 5px 1px #cc9858;
 }
 
-.informationsSection{
-  display: flex;
-  flex-direction: column;
-  width: 15vw;
-  margin-right: 6vw;
+.informationsSection {
+	display: flex;
+	flex-direction: column;
+	width: 15vw;
+	margin-right: 6vw;
 }
 
-.informationsSection .data{
-  padding-left: 5px;
+.informationsSection .data {
+	padding-left: 5px;
 }
 
-.informationsSection .data > div{
-  margin-bottom: 20px;
-  align-content: center;
+.informationsSection .data > div {
+	margin-bottom: 20px;
+	align-content: center;
 }
 
-.informationsSection .battery{
-  display: flex;
-  flex-direction: row;
+.informationsSection .battery {
+	display: flex;
+	flex-direction: row;
 }
 
-.informationsSection .batteryImage{
-  position: relative;
-  margin-right: 7px;
-  line-height: 0;
+.informationsSection .batteryImage {
+	position: relative;
+	margin-right: 7px;
+	line-height: 0;
 }
 
-.informationsSection .batteryImage > img{
-  height: 30px;
+.informationsSection .batteryImage > img {
+	height: 30px;
 }
 
-.informationsSection #batteryProgress{
-  position: absolute;
-  bottom: 4px;
-  left: 4px;
-  max-height: 18px;
-  width: 10px;
-  height: 0;
-  background: #53a443;
-  border-radius: 2px;
+.informationsSection #batteryProgress {
+	position: absolute;
+	bottom: 4px;
+	left: 4px;
+	max-height: 18px;
+	width: 10px;
+	height: 0;
+	background: #53a443;
+	border-radius: 2px;
 }
 
-.informationsSection .battery > p{
-  display: flex;
-  align-items: center;
+.informationsSection .battery > p {
+	display: flex;
+	align-items: center;
 }
 
-.informationsSection .sensors{
-  display: flex;
-  flex-direction: column;
+.informationsSection .sensors {
+	display: flex;
+	flex-direction: column;
 }
 
-.cameraSection{
-  display: flex;
-  flex-direction: column;
-  width: 40vw;
+.cameraSection {
+	display: flex;
+	flex-direction: column;
+	width: 40vw;
 }
 
-.display{
-  display: flex;
-  background-color: white;
-  overflow: auto;
-  justify-content: center;
-  flex-direction: column;
+.display {
+	display: flex;
+	background-color: white;
+	overflow: auto;
+	justify-content: center;
+	flex-direction: column;
 }
 
-.display > .camera{
-  position: relative;
-  overflow: hidden;
-  display: inline-block;
-  height: 385px;
-  align-self: center;
+.display > .camera {
+	position: relative;
+	overflow: hidden;
+	display: inline-block;
+	height: 385px;
+	align-self: center;
 }
 
-.display > .camera > #cameraDisplay{
-  height: 100%;
-  user-select: none;
+.display > .camera > #cameraDisplay {
+	height: 100%;
+	user-select: none;
 }
 
-.display > .camera > .cameraDragActive:hover{
-  cursor: grab;
+.display > .camera > .cameraDragActive:hover {
+	cursor: grab;
 }
 
-.display > .camera > .cameraDragActive:active{
-  cursor: grabbing;
+.display > .camera > .cameraDragActive:active {
+	cursor: grabbing;
 }
 
-.cameraControls{
-  position: absolute;
-  display: flex;
-  flex-direction: row;
-  top: 5px;
-  left: 5px;
+.cameraControls {
+	position: absolute;
+	display: flex;
+	flex-direction: row;
+	top: 5px;
+	left: 5px;
 }
 
-.cameraControls > button{
-  display: flex;
-  height: 40px;
-  width: 40px;
-  background: rgba(0, 0, 0, 0.2);
-  border: none;
-  padding: 0;
-  margin-right: 5px;
-  border-radius: 5px;
-  background-size: cover;
+.cameraControls > button {
+	display: flex;
+	height: 40px;
+	width: 40px;
+	background: rgba(0, 0, 0, 0.2);
+	border: none;
+	padding: 0;
+	margin-right: 5px;
+	border-radius: 5px;
+	background-size: cover;
 }
 
-.cameraControls > #lightButton{
-  background-image: url('../images/bulbOff2.png');
+.cameraControls > #lightButton {
+	background-image: url("../images/bulbOff2.png");
 }
 
-.cameraControls > #lightButton:disabled{
-  cursor: not-allowed;
+.cameraControls > #lightButton:disabled {
+	cursor: not-allowed;
 }
 
-.cameraControls > button:hover{
-  cursor: pointer;
+.cameraControls > button:hover {
+	cursor: pointer;
 }
 
-.soundboardSection{
-  width: 25vw;
-  padding: 10px;
-  margin-right: 6vw;
+.soundboardSection {
+	width: 25vw;
+	padding: 10px;
+	margin-right: 6vw;
 }
 
-.soundboardTitle{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+.soundboardTitle {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
 }
 
-.volumeSlider{
-    margin-right: 8%;
-    cursor: pointer;
+.volumeSlider {
+	margin-right: 8%;
+	cursor: pointer;
 }
 
-.soundsGrid{
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  height: 80%;
+.soundsGrid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	height: 80%;
 }
 
-.soundButton{
-  margin: 3px;
-  position: relative;
-  overflow: hidden;
-  font-family: Arial;
+.soundButton {
+	margin: 3px;
+	position: relative;
+	overflow: hidden;
+	font-family: Arial;
 }
 
-.progressBar{
-  position: absolute;
-  height: 100%;
-  width: 0%;
-  top: 0;
-  left: 0;
-  background: #cc9858;
-  transition: width 0ms linear;
-  border-radius: 3px;
+.progressBar {
+	position: absolute;
+	height: 100%;
+	width: 0%;
+	top: 0;
+	left: 0;
+	background: #cc9858;
+	transition: width 0ms linear;
+	border-radius: 3px;
 }
 
-.buttonText{
-  position: relative;
+.buttonText {
+	position: relative;
 }
 
-.soundButton:hover{
-  cursor: pointer;
+.soundButton:hover {
+	cursor: pointer;
 }
 
-.soundButton:disabled{
-  cursor: not-allowed;
+.soundButton:disabled {
+	cursor: not-allowed;
 }
 
-.controlsSection{
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 25vw;
-  border-radius: 5px;
+.controlsSection {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	width: 25vw;
+	border-radius: 5px;
 }
 
-.shifting{
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-  height: 100%;
+.shifting {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	align-items: center;
+	height: 100%;
 }
 
-.mode{
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+.mode {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
 }
 
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 51px;
-  height: 90px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  border-radius: 50%;
+	position: relative;
+	display: inline-block;
+	width: 51px;
+	height: 90px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	border-radius: 50%;
 }
-  
+
 .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+	opacity: 0;
+	width: 0;
+	height: 0;
 }
-  
+
 .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: grey;
-  -webkit-transition: .4s;
-  transition: .4s;
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: grey;
+	-webkit-transition: 0.4s;
+	transition: 0.4s;
 }
-  
+
 .slider:before {
-  position: absolute;
-  content: "";
-  height: 39px;
-  width: 39px;
-  left: 6px;
-  top: 6px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+	position: absolute;
+	content: "";
+	height: 39px;
+	width: 39px;
+	left: 6px;
+	top: 6px;
+	background-color: white;
+	-webkit-transition: 0.4s;
+	transition: 0.4s;
 }
 
 input:checked + .slider {
-  background-color: #cc9858;
+	background-color: #cc9858;
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateY(39px);
-  -ms-transform: translateY(39px);
-  transform: translateY(39px);
+	-webkit-transform: translateY(39px);
+	-ms-transform: translateY(39px);
+	transform: translateY(39px);
 }
 
 .slider.round {
-  border-radius: 34px;
+	border-radius: 34px;
 }
 
 .slider.round:before {
-  border-radius: 50%;
+	border-radius: 50%;
 }
 
-.joystick{
-  height: 150px;
-  width: 150px;
-  background-color: white;
-  border-radius: 50%;
-  position: relative;
-  cursor: grab;
+.joystick {
+	height: 150px;
+	width: 150px;
+	background-color: white;
+	border-radius: 50%;
+	position: relative;
+	cursor: grab;
 }
 
-.joystickHead{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-left: -30px;
-  margin-top: -30px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: gray;
+.joystickHead {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -30px;
+	margin-top: -30px;
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	background-color: gray;
 }
 
 /* Arrows on the head */
-.joystickHead::after{
-  position: absolute;
-  content: "";
-  top: 50%;
-  left: 50%;
-  margin-left: -18px;
-  margin-top: -18px;
-  width: 36px;
-  height: 36px;
-  transform: rotateZ(45deg);
-  background-image: radial-gradient(transparent 0%, transparent 70%, white 74%, white 100%);
+.joystickHead::after {
+	position: absolute;
+	content: "";
+	top: 50%;
+	left: 50%;
+	margin-left: -18px;
+	margin-top: -18px;
+	width: 36px;
+	height: 36px;
+	transform: rotateZ(45deg);
+	background-image: radial-gradient(
+		transparent 0%,
+		transparent 70%,
+		white 74%,
+		white 100%
+	);
 }
 
 .joystick svg {
-  width: 100%;
-  height: 100%;
+	width: 100%;
+	height: 100%;
 }
 
 .joystick.dragging {
-  cursor: grabbing;
+	cursor: grabbing;
 }
 
 .joystick.dragging .joystickHead {
-  background-color: #cc9858;
+	background-color: #cc9858;
 }
 
-.joystick.disabled{
-  cursor: not-allowed;
-  background-color: #AAAAAA;
-  
+.joystick.disabled {
+	cursor: not-allowed;
+	background-color: #aaaaaa;
 }
 
-.arms{
-  display: flex;
-  flex-direction: row;
-  width: 16%;
-  justify-content: space-between;
+.arms {
+	display: flex;
+	flex-direction: row;
+	width: 16%;
+	justify-content: space-between;
 }
 
-input[type=range].armSlider:disabled{
-  cursor: not-allowed;
+input[type="range"].armSlider:disabled {
+	cursor: not-allowed;
 }
 
-input[type=range].armSlider {
-  height: 100%;
-  background-color: transparent;
-  width: 17px;
-  cursor: pointer;
+input[type="range"].armSlider {
+	height: 100%;
+	background-color: transparent;
+	width: 17px;
+	cursor: pointer;
 }
-
-
-
-
 
 /*input[type=range].armSlider {
   height: 100%;
@@ -456,105 +455,101 @@ input[type=range].armSlider::-moz-range-thumb {
   cursor: pointer;
 }*/
 
-
-
-
-
 @media screen and (max-width: 80rem) {
-  body{
-    flex-direction: column;
-  }
+	body {
+		flex-direction: column;
+	}
 
-  .wall-e{
-    display: none;
-  }
+	.wall-e {
+		display: none;
+	}
 
-  .title{
-    position : initial;
-    align-items: center;
-  }
+	.title {
+		position: initial;
+		align-items: center;
+	}
 
-  .menu{
-    width: auto;
-    padding: 20px;
-    padding-bottom: 5px;
-  }
+	.menu {
+		width: auto;
+		padding: 20px;
+		padding-bottom: 5px;
+	}
 
-  .one{
-    flex-direction: column;
-    height: auto;
-  }
+	.one {
+		flex-direction: column;
+		height: auto;
+	}
 
-  .two{
-    flex-direction: column-reverse;
-    height: auto;
-  }
+	.two {
+		flex-direction: column-reverse;
+		height: auto;
+	}
 
-  .line{
-    align-items: center;
-  }
+	.line {
+		align-items: center;
+	}
 
-  .line > div{
-    width: 95%;
-    margin-bottom: 20px;
-  }
+	.line > div {
+		width: 95%;
+		margin-bottom: 20px;
+	}
 
-  .informationsSection{
-    margin: 0;
-  }
+	.informationsSection {
+		margin: 0;
+	}
 
-  .cameraSection .camera{
-    height: 550px;
-  }
+	.cameraSection .camera {
+		height: 550px;
+	}
 
-  .cameraSection .cameraControls{
-    top: 15px;
-    left: 15px;
-  }
+	.cameraSection .cameraControls {
+		top: 15px;
+		left: 15px;
+	}
 
-  .cameraSection .cameraButton{
-    height: 60px;
-    width: 60px;
-    margin-right: 15px;
-  }
+	.cameraSection .cameraButton {
+		height: 60px;
+		width: 60px;
+		margin-right: 15px;
+	}
 
-  .controlsSection{
-    height: 400px;
-  }
+	.controlsSection {
+		height: 400px;
+	}
 
-  .controlsSection p{
-    font-size: 1.5em;
-  }
+	.controlsSection p {
+		font-size: 1.5em;
+	}
 
-  .controlsSection .switch{
-    height: 90px;
-    width: 51px;
-  }
+	.controlsSection .switch {
+		height: 90px;
+		width: 51px;
+	}
 
-  .controlsSection .round{
-    border-radius: 51px;
-  }
+	.controlsSection .round {
+		border-radius: 51px;
+	}
 
-  .controlsSection .joystick{
-    height: 200px;
-    width: 200px;
-  }
+	.controlsSection .joystick {
+		height: 200px;
+		width: 200px;
+	}
 
-  .controlsSection input[type=range].armSlider{
-    width: 30px;
-    height: 150%;
-  }
+	.controlsSection input[type="range"].armSlider {
+		width: 30px;
+		height: 150%;
+	}
 
-  .soundboardSection{
-    margin: 0;
-    height: 400px;
-  }
+	.soundboardSection {
+		margin: 0;
+		height: 400px;
+	}
 
-  .soundboardSection > .soundsGrid{
-    height: 90%;
-  }
+	.soundboardSection > .soundsGrid {
+		height: 90%;
+	}
 
-  .soundboardSection .buttonText{
-    font-size: 2em;;
-  }
+	.soundboardSection .buttonText {
+		font-size: 2em;
+	}
 }

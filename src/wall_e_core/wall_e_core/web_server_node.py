@@ -5,29 +5,34 @@ import threading
 import os
 from rclpy.node import Node
 
-PORT = 8080
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 WORKSPACE_DIR = os.path.abspath(os.path.join(PACKAGE_DIR, "../../../../../.."))
 WEB_DIR = os.path.join(WORKSPACE_DIR, "web_server")
+
+PORT = 8080
 
 
 class WebServerNode(Node):
     def __init__(self):
         super().__init__("web_server_node")
-        
+
+        self.declare_parameter("port", PORT)
+
+        self.port = self.get_parameter("port").get_parameter_value().integer_value
+
         if not os.path.exists(WEB_DIR):
             raise FileNotFoundError(f"Ressources folder not found: {WEB_DIR}")
-        
+
         self.server_thread = threading.Thread(target=self.run, daemon=True)
         self.server_thread.start()
 
     def run(self):
         os.chdir(WEB_DIR)
         handler = http.server.SimpleHTTPRequestHandler
-        
-        with socketserver.TCPServer(("", PORT), handler) as httpd:
-            self.get_logger().info(f"Online web server on http://localhost:{PORT}")
-            
+
+        with socketserver.TCPServer(("", self.port), handler) as httpd:
+            self.get_logger().info(f"Online web server on http://localhost:{self.port}")
+
             try:
                 httpd.serve_forever()
             except BrokenPipeError:

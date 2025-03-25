@@ -37,7 +37,7 @@ class UltrasonicSensor:
         while GPIO.input(self.bcm_echo_pin) == 1 and stopTime - startTime < 0.05:
             stopTime = time.time()
 
-        distance_cm = round((stopTime - startTime) * 34300 / 2, 2)
+        distance_cm = round((stopTime - startTime) * 34300 / 2, 2)  # Keep 2 decimals
 
         if self.logger:
             self.logger.debug(f"Distance: {distance_cm}")
@@ -49,24 +49,52 @@ DEFAULT_RATE = 20
 
 BCM_LEFT_TRIG_PIN = 17
 BCM_LEFT_ECHO_PIN = 18
-
 BCM_RIGHT_TRIG_PIN = 22
 BCM_RIGHT_ECHO_PIN = 23
+BCM_FRONT_TRIG_PIN = 6
+BCM_FRONT_ECHO_PIN = 12
 
 
 class UltrasonicSensorsNode(Node):
-    def __init__(self, rate: float = DEFAULT_RATE):
+    def __init__(self):
         super().__init__("ultrasonic_sensors_node")
 
+        self.declare_parameter("rate", DEFAULT_RATE)
+        self.declare_parameter("bcm_left_trig_pin", BCM_LEFT_TRIG_PIN)
+        self.declare_parameter("bcm_left_echo_pin", BCM_LEFT_ECHO_PIN)
+        self.declare_parameter("bcm_right_trig_pin", BCM_RIGHT_TRIG_PIN)
+        self.declare_parameter("bcm_right_echo_pin", BCM_RIGHT_ECHO_PIN)
+        self.declare_parameter("bcm_front_trig_pin", BCM_FRONT_TRIG_PIN)
+        self.declare_parameter("bcm_front_echo_pin", BCM_FRONT_ECHO_PIN)
+
+        rate = self.get_parameter("rate").get_parameter_value().integer_value
+        bcm_left_trig_pin = (
+            self.get_parameter("bcm_left_trig_pin").get_parameter_value().integer_value
+        )
+        bcm_left_echo_pin = (
+            self.get_parameter("bcm_left_echo_pin").get_parameter_value().integer_value
+        )
+        bcm_right_trig_pin = (
+            self.get_parameter("bcm_right_trig_pin").get_parameter_value().integer_value
+        )
+        bcm_right_echo_pin = (
+            self.get_parameter("bcm_right_echo_pin").get_parameter_value().integer_value
+        )
+        bcm_front_trig_pin = (
+            self.get_parameter("bcm_front_trig_pin").get_parameter_value().integer_value
+        )
+        bcm_front_echo_pin = (
+            self.get_parameter("bcm_front_echo_pin").get_parameter_value().integer_value
+        )
+
         self.sensors = [
-            UltrasonicSensor(BCM_LEFT_TRIG_PIN, BCM_LEFT_ECHO_PIN),  # left sensor
-            UltrasonicSensor(BCM_RIGHT_TRIG_PIN, BCM_RIGHT_ECHO_PIN),  # right sensor
-            # UltrasonicSensor(None, None),  # front sensor
+            UltrasonicSensor(bcm_left_trig_pin, bcm_left_echo_pin),  # left sensor
+            UltrasonicSensor(bcm_right_trig_pin, bcm_right_echo_pin),  # right sensor
+            UltrasonicSensor(bcm_front_trig_pin, bcm_front_echo_pin),  # front sensor
         ]
-        self.rate = rate
 
         self.publisher = self.create_publisher(Float32MultiArray, "distances_topic", 10)
-        self.timer = self.create_timer(1.0 / self.rate, self.publish_distances)
+        self.timer = self.create_timer(1.0 / rate, self.publish_distances)
 
     def publish_distances(self):
         msg = Float32MultiArray()

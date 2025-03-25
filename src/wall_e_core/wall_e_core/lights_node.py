@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import rclpy
 from rclpy.node import Node
-from wall_e_msg_srv.srv import SetIntensity
+from wall_e_msg_srv.srv import SetLightIntensity
 
 
 class Light:
@@ -29,21 +29,27 @@ BCM_LED_LIGHT_PIN = 5
 class LightsNode(Node):
     def __init__(self):
         super().__init__("lights_node")
+        
+        self.declare_parameter("bcm_camera_light_pin", BCM_CAMERA_LIGHT_PIN)
+        self.declare_parameter("bcm_led_light_pin", BCM_LED_LIGHT_PIN)
+
+        camera_light_pin = self.get_parameter("bcm_camera_light_pin").get_parameter_value().integer_value
+        led_light_pin = self.get_parameter("bcm_led_light_pin").get_parameter_value().integer_value
 
         self.lights = {
             "camera_light": Light(
-                BCM_CAMERA_LIGHT_PIN, is_default_on=False, logger=self.get_logger()
+                camera_light_pin, is_default_on=False, logger=self.get_logger()
             ),
-            "speaker_light": Light(
-                BCM_LED_LIGHT_PIN, is_default_on=False, logger=self.get_logger()
+            "led_light": Light(
+                led_light_pin, is_default_on=False, logger=self.get_logger()
             ),
         }
 
-        self.set_intensity_srv = self.create_service(
-            SetIntensity, "set_intensity", self.set_intensity_callback
+        self.set_light_intensity_srv = self.create_service(
+            SetLightIntensity, "set_light_intensity", self.set_light_intensity_callback
         )
 
-    def set_intensity_callback(self, request, response):
+    def set_light_intensity_callback(self, request, response):
         light_id = request.light_id
         intensity_pct = request.intensity_pct
 

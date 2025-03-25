@@ -1,5 +1,4 @@
 from setuptools import find_packages, setup
-from glob import glob
 
 package_name = "wall_e_core"
 
@@ -10,18 +9,19 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
-        ("share/" + package_name + "/launch", glob("launch/*.py")),
+        ("share/wall_e_core/launch", ["launch/wall_e_launch.py"]),
+        ("share/wall_e_core/config", ["config/params.yaml"]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="marc",
+    maintainer="Marc GUEDON",
     maintainer_email="marcguedon@gmail.com",
     description="TODO: Package description",
     license="MIT",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "web_server_node = wall_e_core.web_server_node:main",
+            "web_server_node = wall_e_core.web_server_node_single:main",
             "screen_node = wall_e_core.screen_node:main",
             "battery_node = wall_e_core.battery_node:main",
             "camera_node = wall_e_core.camera_node:main",

@@ -6,26 +6,21 @@ from rclpy.node import Node
 from std_msgs.msg import Int8
 from adafruit_ads1x15.analog_in import AnalogIn
 
-DEFAULT_IN_MIN = 14460  # 9V -> 14460
-DEFAULT_IN_MAX = 20195  # 12.6V -> 20195
-DEFAULT_OUT_MIN = 0
-DEFAULT_OUT_MAX = 100
-
 
 class Battery:
     def __init__(
         self,
-        driverAdr: int,
-        in_min: int = DEFAULT_IN_MIN,
-        in_max: int = DEFAULT_IN_MAX,
-        out_min: int = DEFAULT_OUT_MIN,
-        out_max: int = DEFAULT_OUT_MAX,
+        driver_adress: int,
+        in_min: int,
+        in_max: int,
+        out_min: int,
+        out_max: int,
         logger=None,
     ):
         self.logger = logger
 
         i2c = busio.I2C(board.SCL, board.SDA)
-        self.adc = ADS.ADS1115(i2c, address=driverAdr)
+        self.adc = ADS.ADS1115(i2c, address=driver_adress)
         self.channel = AnalogIn(self.adc, ADS.P0)
         self.in_min = in_min
         self.in_max = in_max
@@ -47,18 +42,40 @@ class Battery:
 DEFAULT_RATE = 1
 DEFAULT_ADR = 0x48
 
+DEFAULT_IN_MIN = 14460  # -> 9V
+DEFAULT_IN_MAX = 20195  # -> 12.6V
+DEFAULT_OUT_MIN = 0
+DEFAULT_OUT_MAX = 100
+
 
 class BatteryNode(Node):
-    def __init__(self, rate: float = DEFAULT_RATE):
+    def __init__(self):
         super().__init__("battery_node")
 
-        self.battery = Battery(DEFAULT_ADR, logger=self.get_logger())
-        self.rate = rate
+        self.declare_parameter("driver_adress", DEFAULT_ADR)
+        self.declare_parameter("rate", DEFAULT_RATE)
+        self.declare_parameter("in_min", DEFAULT_IN_MIN)
+        self.declare_parameter("in_max", DEFAULT_IN_MAX)
+        self.declare_parameter("out_min", DEFAULT_OUT_MIN)
+        self.declare_parameter("out_max", DEFAULT_OUT_MAX)
+
+        driver_adress = (
+            self.get_parameter("driver_adress").get_parameter_value().integer_value
+        )
+        rate = self.get_parameter("rate").get_parameter_value().integer_value
+        in_min = self.get_parameter("in_min").get_parameter_value().integer_value
+        in_max = self.get_parameter("in_max").get_parameter_value().integer_value
+        out_min = self.get_parameter("out_min").get_parameter_value().integer_value
+        out_max = self.get_parameter("out_max").get_parameter_value().integer_value
+
+        self.battery = Battery(
+            driver_adress, in_min, in_max, out_min, out_max, logger=self.get_logger()
+        )
 
         self.battery_charge_publisher = self.create_publisher(
             Int8, "battery_charge_topic", 10
         )
-        self.timer = self.create_timer(1.0 / self.rate, self.publish_battery_charge)
+        self.timer = self.create_timer(1.0 / rate, self.publish_battery_charge)
 
     def publish_battery_charge(self):
         msg = Int8()
