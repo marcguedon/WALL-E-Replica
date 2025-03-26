@@ -9,14 +9,14 @@ PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 WORKSPACE_DIR = os.path.abspath(os.path.join(PACKAGE_DIR, "../../../../../.."))
 WEB_DIR = os.path.join(WORKSPACE_DIR, "web_server")
 
-PORT = 8080
+DEFAULT_PORT = 8080
 
 
 class WebServerNode(Node):
     def __init__(self):
         super().__init__("web_server_node")
 
-        self.declare_parameter("port", PORT)
+        self.declare_parameter("port", DEFAULT_PORT)
 
         self.port = self.get_parameter("port").get_parameter_value().integer_value
 

@@ -38,9 +38,9 @@ screen_node:
   ros__parameters:
     dc_pin: 24
     rst_pin: 25
+    baudrate: 40000000
     cs_pin: -1
     blk_pin: -1
-    baudrate: -1
 
 servomotors_node:
   ros__parameters:

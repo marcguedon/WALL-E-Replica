@@ -25,9 +25,9 @@ class Screen:
         self,
         dc_pin: int,
         rst_pin: int,
+        baudrate: int,
         cs_pin: int,
         blk_pin: int,
-        baudrate: int,
         logger=None,
     ):
         self.logger = logger
@@ -42,11 +42,13 @@ class Screen:
 
         spi.configure(baudrate=baudrate, phase=1, polarity=1)
 
-        # TODO Modifier la gestion des broches
+        cs_pin = None if cs_pin is None else microcontroller.Pin(cs_pin)
+        blk_pin = None if blk_pin is None else microcontroller.Pin(blk_pin)
+
         display_bus = FourWire(
             spi,
             command=microcontroller.Pin(dc_pin),
-            chip_select=microcontroller.Pin(cs_pin),
+            chip_select=cs_pin,
             reset=microcontroller.Pin(rst_pin),
         )
 
@@ -55,7 +57,7 @@ class Screen:
             width=SCREEN_WIDTH,
             height=SCREEN_HEIGHT,
             rowstart=80,
-            backlight_pin=microcontroller.pin(blk_pin),
+            backlight_pin=blk_pin,
         )
         self.display.rotation = 180
 
@@ -110,9 +112,9 @@ class Screen:
 
 DEFAULT_DC_PIN = 24
 DEFAULT_RST_PIN = 25
+DEFAULT_BAUDRATE = 40000000
 DEFAULT_CS_PIN = 8
 DEFAULT_BLK_PIN = 27
-DEFAULT_BAUDRATE = None
 
 
 class ScreenNode(Node):
@@ -121,21 +123,20 @@ class ScreenNode(Node):
 
         self.declare_parameter("dc_pin", DEFAULT_DC_PIN)
         self.declare_parameter("rst_pin", DEFAULT_RST_PIN)
+        self.declare_parameter("baudrate", DEFAULT_BAUDRATE)
         self.declare_parameter("cs_pin", DEFAULT_CS_PIN)
         self.declare_parameter("blk_pin", DEFAULT_BLK_PIN)
-        self.declare_parameter("baudrate", DEFAULT_BAUDRATE)
 
         dc_pin = self.get_parameter("dc_pin").get_parameter_value().integer_value
         rst_pin = self.get_parameter("rst_pin").get_parameter_value().integer_value
+        baudrate = self.get_parameter("baudrate").get_parameter_value().integer_value
         cs_pin = self.get_parameter("cs_pin").get_parameter_value().integer_value
         cs_pin = None if cs_pin == -1 else int(cs_pin)
         blk_pin = self.get_parameter("blk_pin").get_parameter_value().integer_value
         blk_pin = None if blk_pin == -1 else int(blk_pin)
-        baudrate = self.get_parameter("baudrate").get_parameter_value().integer_value
-        baudrate = None if baudrate == -1 else int(baudrate)
 
         self.screen = Screen(
-            dc_pin, rst_pin, cs_pin, blk_pin, baudrate, logger=self.get_logger()
+            dc_pin, rst_pin, baudrate, cs_pin, blk_pin, logger=self.get_logger()
         )
 
         self.battery_charge_subscription = self.create_subscription(

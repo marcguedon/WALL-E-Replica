@@ -21,7 +21,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "web_server_node = wall_e_core.web_server_node_single:main",
+            "web_server_node = wall_e_core.web_server_node:main",
             "screen_node = wall_e_core.screen_node:main",
             "battery_node = wall_e_core.battery_node:main",
             "camera_node = wall_e_core.camera_node:main",

@@ -43,11 +43,13 @@ document.addEventListener("DOMContentLoaded", function () {
 	var request = new ROSLIB.ServiceRequest({});
 
 	get_automatic_mode_service.callService(request, function (result) {
-		if (result.is_active) {
+		automatic_mode_on = result.is_active;
+
+		if (automatic_mode_on == true) {
 			remove_camera_drag_active_class();
 			checkbox.checked = true;
 			light_button.disabled = true;
-			movement_stick.add("disabled");
+			movement_stick.classList.add("disabled");
 			arm_sliders.forEach(function (slider) {
 				slider.disabled = true;
 				slider.value = 0;
