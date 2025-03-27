@@ -6,7 +6,7 @@ sudo apt-get update
 sudo apt-get install -y libraspberrypi-bin v4l-utils raspi-config python3-pip
 sudo apt-get install -y ros-humble-rosbridge-server ros-humble-vision-opencv ros-humble-v4l2-camera
 
-python3 -m pip install requirements.txt
+python3 -m pip install -r requirements.txt
 
 # Downloading roslib.js file
 curl -o /home/$USER/WALL-E-Replica/web_server/js/roslib.js https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js
