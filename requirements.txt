@@ -1,0 +1,15 @@
+numpy=1.26.4
+colcon-common-extensions=0.3.0
+RPi.GPIO=0.7.1a4
+pygame=2.1.2
+opencv-contrib-python=4.11.0.86
+opencv-python=4.11.0.86
+mediapipe=0.10.18
+ultralytics=8.3.94
+adafruit-circuitpython-display-shapes=2.10.1
+adafruit-circuitpython-pca9685=3.4.17
+adafruit-circuitpython-ads1x15=2.4.2
+adafruit-circuitpython-st7789=2.0.0
+
+# websockets=15.0.1
+# aiohttp=3.11.14

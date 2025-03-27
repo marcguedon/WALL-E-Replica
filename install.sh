@@ -3,11 +3,10 @@
 sudo apt-get update
 
 # Installing the dependencies
-sudo apt-get install -y libraspberrypi-bin v4l-utils raspi-config
+sudo apt-get install -y libraspberrypi-bin v4l-utils raspi-config python3-pip
 sudo apt-get install -y ros-humble-rosbridge-server ros-humble-vision-opencv ros-humble-v4l2-camera
-sudo apt-get install -y python3-colcon-common-extensions python3-numpy python3-opencv python3-pygame python3-pip python3-rpi.gpio
 
-python3 -m pip install mediapipe ultralytics adafruit-circuitpython-display-text adafruit-circuitpython-display-shapes adafruit-circuitpython-pca9685 adafruit-circuitpython-ads1x15 adafruit-circuitpython-st7789
+python3 -m pip install requirements.txt
 
 # Downloading roslib.js file
 curl -o /home/$USER/WALL-E-Replica/web_server/js/roslib.js https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js
