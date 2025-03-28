@@ -174,22 +174,22 @@ class ServomotorsNode(Node):
             # Max angle (up) : 140 / min angle (down) : 40
             self.right_arm.set_angle(angle)
 
-    def move_head(self, direction: str):
-        if direction == "left":
+    def move_head(self, x_direction: str, y_direction: str):
+        if x_direction == "left":
             if self.current_head_rotation_angle + self.step <= 150:
                 self.current_head_rotation_angle += self.step
                 self.head_rotation.set_angle(self.current_head_rotation_angle)
             else:
                 self.current_head_rotation_angle = 150
 
-        if direction == "right":
+        if x_direction == "right":
             if self.current_head_rotation_angle - self.step >= 30:
                 self.current_head_rotation_angle -= self.step
                 self.head_rotation.set_angle(self.current_head_rotation_angle)
             else:
                 self.current_head_rotation_angle = 30
 
-        if direction == "up":
+        if y_direction == "up":
             if self.current_neck_top_angle - self.step >= 0:
                 self.current_neck_top_angle -= self.step
                 self.neck_top.set_angle(self.current_neck_top_angle)
@@ -202,7 +202,7 @@ class ServomotorsNode(Node):
             else:
                 self.current_neck_bottom_angle = 180
 
-        if direction == "down":
+        if y_direction == "down":
             if self.current_neck_top_angle + self.step <= 180:
                 self.current_neck_top_angle += self.step
                 self.neck_top.set_angle(self.current_neck_top_angle)
@@ -238,13 +238,14 @@ class ServomotorsNode(Node):
         return response
 
     def move_head_callback(self, request, response):
-        direction = request.direction
+        x_direction = request.x_direction
+        y_direction = request.y_direction
 
         self.get_logger().debug(
-            f"move_head_callback service called\ndirection: {direction}"
+            f"move_head_callback service called\nx_direction: {x_direction}, y_direction: {y_direction}"
         )
 
-        self.move_head(direction)
+        self.move_head(x_direction, y_direction)
         response.success = True
 
         return response
