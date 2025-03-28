@@ -1,5 +1,4 @@
 numpy==1.26.4
-colcon-common-extensions==0.3.0
 RPi.GPIO==0.7.1a4
 pygame==2.1.2
 opencv-contrib-python==4.11.0.86
