@@ -3,8 +3,9 @@
 sudo apt-get update
 
 # Installing the dependencies
-sudo apt-get install -y libraspberrypi-bin v4l-utils raspi-config python3-pip
+sudo apt-get install -y libraspberrypi-bin v4l-utils raspi-config
 sudo apt-get install -y ros-humble-rosbridge-server ros-humble-vision-opencv ros-humble-v4l2-camera
+sudo apt-get install -y python3-pip python3-colcon-common-extensions
 
 python3 -m pip install -r requirements.txt
 
