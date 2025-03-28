@@ -261,11 +261,12 @@ function move_head(current_x, current_y) {
 	if (Math.abs(diff_x) > threshold)
 		x_direction = diff_x > 0 ? "right" : "left";
 
-	if (Math.abs(diff_y) > threshold) y_direction = diff_y > 0 ? "down" : "up";
+	if (Math.abs(diff_y) > threshold)
+		y_direction = diff_y > 0 ? "down" : "up";
 
 	var request = new ROSLIB.ServiceRequest({
-		x_direction: parseFloat(x_direction),
-		y_direction: parseFloat(y_direction),
+		x_direction: x_direction,
+		y_direction: y_direction,
 	});
 
 	move_head_service.callService(request, function (result) {
