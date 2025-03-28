@@ -2,6 +2,8 @@
 
 Here is the [link to my project webpage](http://thedraill.e-monsite.com/pages/projects/wall-e-replica.html). You will find information about the nomenclature, 3D printing and electronics.
 
+My goal was to add an automatic mode to WALL-E, but the Raspberry Pi isn't a powerful enough platform to run AI. So, there's an automatic mode that can be activated through the web interface, but it's still in early development. It's also extremely slow due to hardware limitations.
+
 ## Installation of the environment
 
 ### Installation of the OS
@@ -24,7 +26,7 @@ cd ~
 git clone https://github.com/marcguedon/WALL-E-Replica.git
 ```
 
-To install all the dependencies and prepare the project, you just need to execute the `install.sh` script.
+To install all the dependencies and prepare the project, you just need to execute the `install.sh` script. This may take several minutes.
 
 ```console
 cd WALL-E-Replica
